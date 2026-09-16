@@ -7,6 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
+import { useAuth, useClerk, useUser } from '@clerk/expo';
 import { PageHeader, Screen, Surface } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
 import { useWarung } from '@/context/WarungContext';
@@ -65,11 +66,23 @@ export default function OtherScreen() {
   const c = useColors();
   const router = useRouter();
   const warung = useWarung();
+  const { isSignedIn } = useAuth();
+  const { isLoaded: isUserLoaded, user } = useUser();
+  const { signOut } = useClerk();
   const [notice, setNotice] = useState('');
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoringOffline, setIsRestoringOffline] = useState(false);
   const [isQrisUploading, setIsQrisUploading] = useState(false);
   const [qrisSheetVisible, setQrisSheetVisible] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setNotice('Kamu sudah keluar dari akun Google.');
+    } catch {
+      setNotice('Akun belum berhasil dikeluarkan. Silakan coba lagi.');
+    }
+  };
 
   const createBackup = () => ({
     ...createOfflineBackup({
@@ -260,6 +273,37 @@ export default function OtherScreen() {
           </Pressable>
         ))}
       </View>
+
+      <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Akun</Text>
+      <Surface style={s.menuCard}>
+        {isUserLoaded && isSignedIn ? (
+          <>
+            <MenuRow
+              icon="person-circle-outline"
+              label={user?.fullName || 'Akun Google'}
+              detail={user?.primaryEmailAddress?.emailAddress || 'Akun tersambung'}
+              testID="signed-in-account-row"
+              onPress={() => setNotice('Akun Google sedang aktif di perangkat ini.')}
+            />
+            <View style={[s.rowDivider, { backgroundColor: c.border }]} />
+            <MenuRow
+              icon="log-out-outline"
+              label="Keluar dari akun"
+              detail="Putuskan akses akun Google di aplikasi ini"
+              testID="google-sign-out-button"
+              onPress={() => void handleSignOut()}
+            />
+          </>
+        ) : (
+          <MenuRow
+            icon="logo-google"
+            label="Masuk dengan Google"
+            detail="Simpan akses akun warung dengan aman"
+            testID="google-sign-in-menu-row"
+            onPress={() => router.push('/sign-in')}
+          />
+        )}
+      </Surface>
 
       <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Manajemen</Text>
       <Surface style={s.menuCard}>
