@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Kasir Miso",
+    "slug": "kasirwarung",
+    "version": "7.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "com.kasirwarung.app",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#EEF6FF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kasirwarung.app"
+    },
+    "android": {
+      "package": "com.kasirwarung.app",
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/kasir_miso_notification.wav"
+          ]
+        }
+      ],
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e5f461a4-0000-4cd5-b4f2-f0296c732490"
+      }
+    },
+    "owner": "ddksryd"
+  }
+}

@@ -1,0 +1,1 @@
+- [Artifact import lifecycle](artifact-import.md) — preserve generated artifact metadata when merging uploaded app source.
