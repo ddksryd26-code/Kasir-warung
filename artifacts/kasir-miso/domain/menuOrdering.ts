@@ -3,6 +3,12 @@ import { normalizeShoppingExpenses } from './shoppingExpenses';
 
 export const WARUNG_STATE_STORAGE_KEY = 'warung-state-v2';
 
+export function getWarungStateStorageKey(userId?: string | null) {
+  return userId
+    ? `${WARUNG_STATE_STORAGE_KEY}:account:${encodeURIComponent(userId)}`
+    : WARUNG_STATE_STORAGE_KEY;
+}
+
 export function createDefaultWarungState(): WarungState {
   return {
     menus: [],
@@ -49,8 +55,12 @@ const restoreArrayFields = [
   'savingsEntries',
 ] as const;
 
-export function persistWarungState(state: WarungState, setItem: SetStorageItem) {
-  return setItem(WARUNG_STATE_STORAGE_KEY, JSON.stringify(state));
+export function persistWarungState(
+  state: WarungState,
+  setItem: SetStorageItem,
+  storageKey = WARUNG_STATE_STORAGE_KEY,
+) {
+  return setItem(storageKey, JSON.stringify(state));
 }
 
 export function isRestorableWarungState(value: unknown): value is Partial<WarungState> {
@@ -68,12 +78,13 @@ export async function persistWarungStateSafely(
   previousState: WarungState,
   nextState: WarungState,
   setItem: SetStorageItem,
+  storageKey = WARUNG_STATE_STORAGE_KEY,
 ) {
   try {
-    await persistWarungState(nextState, setItem);
+    await persistWarungState(nextState, setItem, storageKey);
   } catch (error) {
     try {
-      await persistWarungState(previousState, setItem);
+      await persistWarungState(previousState, setItem, storageKey);
     } catch {
       // Keep the original write error. The storage adapter may be unavailable.
     }

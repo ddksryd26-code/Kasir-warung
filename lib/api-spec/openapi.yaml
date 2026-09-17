@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: warung
+    description: Authenticated warung data
 paths:
   /healthz:
     get:
@@ -24,7 +26,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /warung/state:
+    get:
+      operationId: getWarungState
+      tags: [warung]
+      summary: Get the current user's warung state
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: The saved state for the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarungStateResponse"
+        "401":
+          description: Authentication required
+        "404":
+          description: No state has been saved yet
+    put:
+      operationId: saveWarungState
+      tags: [warung]
+      summary: Save the current user's warung state
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveWarungStateBody"
+      responses:
+        "200":
+          description: The saved state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarungStateResponse"
+        "400":
+          description: Invalid state
+        "401":
+          description: Authentication required
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +80,101 @@ components:
           type: string
       required:
         - status
+    WarungState:
+      type: object
+      additionalProperties: true
+      required:
+        - menus
+        - activeOrders
+        - kitchenOrders
+        - inventory
+        - consignments
+        - expenses
+        - sales
+        - cashClosures
+        - savingsRules
+        - savingsEntries
+      properties:
+        menus:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        activeOrders:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        kitchenOrders:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        inventory:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        stockMovements:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        consignments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        expenses:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sales:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        auditTrail:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        cashClosures:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        savingsRules:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        savingsEntries:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        qrisImageUri:
+          type:
+            - string
+            - "null"
+    SaveWarungStateBody:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          $ref: "#/components/schemas/WarungState"
+    WarungStateResponse:
+      type: object
+      required:
+        - state
+        - updatedAt
+      properties:
+        state:
+          $ref: "#/components/schemas/WarungState"
+        updatedAt:
+          type: string
+          format: date-time
 

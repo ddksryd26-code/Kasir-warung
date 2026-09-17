@@ -1,10 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
+import { useAuth } from '@clerk/expo';
+import { saveWarungState, getWarungState } from '@workspace/api-client-react';
 import { persistImageUri } from '@/utils/persistentImage';
 import { appendOrderItems, cancelActiveOrder, submitOrder } from '@/domain/warungTransactions';
 import { addShoppingExpense as addShoppingExpenseToState } from '@/domain/shoppingExpenses';
 import {
   createDefaultWarungState,
+  getWarungStateStorageKey,
   hydrateWarungState,
   isRestorableWarungState,
   persistWarungState,
@@ -149,6 +153,10 @@ export function isDateInReportPeriod(date: string, period: ReportPeriod, now: Da
 export interface WarungState {
   menus: MenuItem[]; activeOrders: ActiveOrder[]; kitchenOrders: ActiveOrder[]; inventory: InventoryItem[]; stockMovements?: StockMovement[]; consignments: ConsignmentItem[]; expenses: Expense[]; sales: Sale[]; auditTrail?: AuditEntry[]; cashClosures: CashClosure[]; savingsRules: SavingsRule[]; savingsEntries: SavingsEntry[]; qrisImageUri?: string;
 }
+type ApiWarungState = Parameters<typeof saveWarungState>[0]['state'];
+
+const toApiWarungState = (value: WarungState) => value as unknown as ApiWarungState;
+
 interface ContextValue extends WarungState {
   hydrated: boolean;
   restoreState: (nextState: unknown) => Promise<void>;
@@ -190,26 +198,85 @@ interface ContextValue extends WarungState {
 const WarungContext = createContext<ContextValue | null>(null);
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 export function WarungProvider({ children }: { children: ReactNode }) {
+  const { isLoaded: authLoaded, userId } = useAuth();
   const [state, setState] = useState<WarungState>(createDefaultWarungState);
   const [hydrated, setHydrated] = useState(false);
+  const storageKey = getWarungStateStorageKey(userId);
   useEffect(() => {
+    if (!authLoaded) return;
     let mounted = true;
-    AsyncStorage.getItem(WARUNG_STATE_STORAGE_KEY)
-      .then((raw) => hydrateWarungState(raw, persistImageUri))
-      .then((nextState) => {
-        if (mounted) setState(nextState);
-      })
-      .catch(() => {
-        if (mounted) setState(createDefaultWarungState());
-      })
-      .finally(() => {
-        if (mounted) setHydrated(true);
-      });
+    setHydrated(false);
+    setState(createDefaultWarungState());
+
+    const loadState = async () => {
+      const localRaw = await AsyncStorage.getItem(storageKey);
+      const legacyRaw = userId && localRaw === null
+        ? await AsyncStorage.getItem(WARUNG_STATE_STORAGE_KEY)
+        : null;
+      let nextState = await hydrateWarungState(localRaw ?? legacyRaw, persistImageUri);
+
+      if (userId) {
+        try {
+          const remote = await getWarungState();
+          if (isRestorableWarungState(remote.state)) {
+            nextState = await hydrateWarungState(JSON.stringify(remote.state), persistImageUri);
+          }
+        } catch (error) {
+          if ((error as { status?: number }).status !== 404) {
+            // Keep the local snapshot when the device is offline or the API is unavailable.
+          }
+          if ((error as { status?: number }).status === 404) {
+            try {
+              await saveWarungState({ state: toApiWarungState(nextState) });
+            } catch {
+              // Keep the local snapshot when the first cloud upload is offline.
+            }
+          }
+        }
+      }
+
+      await persistWarungState(nextState, AsyncStorage.setItem, storageKey);
+      if (userId && legacyRaw !== null) {
+        await AsyncStorage.removeItem(WARUNG_STATE_STORAGE_KEY);
+      }
+      if (mounted) {
+        setState(nextState);
+        setHydrated(true);
+      }
+    };
+
+    void loadState().catch(() => {
+      if (mounted) {
+        setState(createDefaultWarungState());
+        setHydrated(true);
+      }
+    });
     return () => { mounted = false; };
-  }, []);
+  }, [authLoaded, storageKey, userId]);
   useEffect(() => {
-    if (hydrated) void persistWarungState(state, AsyncStorage.setItem);
-  }, [hydrated, state]);
+    if (hydrated) {
+      void persistWarungState(state, AsyncStorage.setItem, storageKey);
+    }
+  }, [hydrated, state, storageKey]);
+  useEffect(() => {
+    if (!hydrated || !userId) return;
+    const timeout = setTimeout(() => {
+      void saveWarungState({ state: toApiWarungState(state) }).catch(() => {
+        // AsyncStorage remains the source of truth while offline; retry on the next change.
+      });
+    }, 750);
+    return () => clearTimeout(timeout);
+  }, [hydrated, state, userId]);
+  useEffect(() => {
+    if (!hydrated || !userId) return;
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') return;
+      void saveWarungState({ state: toApiWarungState(state) }).catch(() => {
+        // Keep the local snapshot when the API is still unavailable.
+      });
+    });
+    return () => subscription.remove();
+  }, [hydrated, state, userId]);
   const value = useMemo<ContextValue>(() => ({
     ...state,
     hydrated,
@@ -218,7 +285,7 @@ export function WarungProvider({ children }: { children: ReactNode }) {
         throw new Error('Data backup tidak memiliki bentuk state Kasir Miso yang valid.');
       }
       const restored = await hydrateWarungState(JSON.stringify(nextState), persistImageUri);
-      await persistWarungStateSafely(state, restored, AsyncStorage.setItem);
+      await persistWarungStateSafely(state, restored, AsyncStorage.setItem, storageKey);
       setState(restored);
     },
     addMenu: (name, price, recipe = {}, category = 'Lainnya', imageUri, variants = []) => setState(s => ({ ...s, menus: [...s.menus, { id: makeId(), name, price, recipe, category, imageUri, variants }] })),
@@ -524,7 +591,7 @@ export function WarungProvider({ children }: { children: ReactNode }) {
        }),
      deleteSavingsRule: id => setState(s => ({ ...s, savingsRules: s.savingsRules.filter((rule) => rule.id !== id) })),
     setQrisImageUri: qrisImageUri => setState(s => ({ ...s, qrisImageUri })),
-  }), [hydrated, state]);
+  }), [hydrated, state, storageKey]);
   return <WarungContext.Provider value={value}>{children}</WarungContext.Provider>;
 }
 function consume(items: InventoryItem[], menus: MenuItem[], orders: OrderItem[]) {

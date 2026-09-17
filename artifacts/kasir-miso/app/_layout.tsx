@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ClerkLoaded, ClerkProvider } from '@clerk/expo';
+import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -21,6 +21,7 @@ import { WarungProvider } from '@/context/WarungContext';
 import { NotesProvider } from '@/context/NotesContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { FirstLaunchTutorial } from '@/components/FirstLaunchTutorial';
+import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -28,6 +29,11 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
 const clerkProxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
+const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
+
+if (apiDomain) {
+  setBaseUrl(`https://${apiDomain}`);
+}
 
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
@@ -56,6 +62,17 @@ function RootLayoutNav() {
       <FirstLaunchTutorial />
     </>
   );
+}
+
+function ClerkApiBridge({ children }: { children: React.ReactNode }) {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+
+  return children;
 }
 
 export default function RootLayout() {
@@ -115,19 +132,21 @@ export default function RootLayout() {
       <ClerkLoaded>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-              <ErrorBoundary>
-                <WarungProvider>
-                  <NotesProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <KeyboardProvider>
-                        <RootLayoutNav />
-                      </KeyboardProvider>
-                    </GestureHandlerRootView>
-                  </NotesProvider>
-                </WarungProvider>
-              </ErrorBoundary>
-            </ThemeProvider>
+            <ClerkApiBridge>
+              <ThemeProvider>
+                <ErrorBoundary>
+                  <WarungProvider>
+                    <NotesProvider>
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        <KeyboardProvider>
+                          <RootLayoutNav />
+                        </KeyboardProvider>
+                      </GestureHandlerRootView>
+                    </NotesProvider>
+                  </WarungProvider>
+                </ErrorBoundary>
+              </ThemeProvider>
+            </ClerkApiBridge>
           </QueryClientProvider>
         </SafeAreaProvider>
       </ClerkLoaded>
