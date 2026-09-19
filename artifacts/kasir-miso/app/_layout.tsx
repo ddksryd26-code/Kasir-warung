@@ -75,6 +75,26 @@ function ClerkApiBridge({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function AppProviders({ withClerk }: { withClerk: boolean }) {
+  const app = (
+    <ThemeProvider>
+      <ErrorBoundary>
+        <WarungProvider>
+          <NotesProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </NotesProvider>
+        </WarungProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
+  );
+
+  return withClerk ? <ClerkApiBridge>{app}</ClerkApiBridge> : app;
+}
+
 export default function RootLayout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [fontError, setFontError] = useState<Error | null>(null);
@@ -123,33 +143,23 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
+  const app = (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <AppProviders withClerk={Boolean(clerkPublishableKey)} />
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
+
+  if (!clerkPublishableKey) return app;
+
   return (
     <ClerkProvider
       publishableKey={clerkPublishableKey}
       tokenCache={tokenCache}
       proxyUrl={clerkProxyUrl}
     >
-      <ClerkLoaded>
-        <SafeAreaProvider>
-          <QueryClientProvider client={queryClient}>
-            <ClerkApiBridge>
-              <ThemeProvider>
-                <ErrorBoundary>
-                  <WarungProvider>
-                    <NotesProvider>
-                      <GestureHandlerRootView style={{ flex: 1 }}>
-                        <KeyboardProvider>
-                          <RootLayoutNav />
-                        </KeyboardProvider>
-                      </GestureHandlerRootView>
-                    </NotesProvider>
-                  </WarungProvider>
-                </ErrorBoundary>
-              </ThemeProvider>
-            </ClerkApiBridge>
-          </QueryClientProvider>
-        </SafeAreaProvider>
-      </ClerkLoaded>
+      <ClerkLoaded>{app}</ClerkLoaded>
     </ClerkProvider>
   );
 }

@@ -197,8 +197,15 @@ interface ContextValue extends WarungState {
 }
 const WarungContext = createContext<ContextValue | null>(null);
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-export function WarungProvider({ children }: { children: ReactNode }) {
-  const { isLoaded: authLoaded, userId } = useAuth();
+function WarungStateProvider({
+  children,
+  authLoaded,
+  userId,
+}: {
+  children: ReactNode;
+  authLoaded: boolean;
+  userId: string | null;
+}) {
   const [state, setState] = useState<WarungState>(createDefaultWarungState);
   const [hydrated, setHydrated] = useState(false);
   const storageKey = getWarungStateStorageKey(userId);
@@ -594,6 +601,23 @@ export function WarungProvider({ children }: { children: ReactNode }) {
   }), [hydrated, state, storageKey]);
   return <WarungContext.Provider value={value}>{children}</WarungContext.Provider>;
 }
+
+function AuthenticatedWarungProvider({ children }: { children: ReactNode }) {
+  const { isLoaded: authLoaded, userId } = useAuth();
+  return <WarungStateProvider authLoaded={authLoaded} userId={userId}>{children}</WarungStateProvider>;
+}
+
+function PreviewWarungProvider({ children }: { children: ReactNode }) {
+  return <WarungStateProvider authLoaded userId={null}>{children}</WarungStateProvider>;
+}
+
+export function WarungProvider({ children }: { children: ReactNode }) {
+  const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+  return clerkPublishableKey
+    ? <AuthenticatedWarungProvider>{children}</AuthenticatedWarungProvider>
+    : <PreviewWarungProvider>{children}</PreviewWarungProvider>;
+}
+
 function consume(items: InventoryItem[], menus: MenuItem[], orders: OrderItem[]) {
   const used: Record<string, number> = {};
   orders.forEach(o => Object.entries(o.recipe ?? menus.find(item => item.id === o.menu)?.recipe ?? {}).forEach(([id, qty]) => { used[id] = (used[id] || 0) + qty * o.qty; }));
