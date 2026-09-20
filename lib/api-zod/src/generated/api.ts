@@ -20,6 +20,9 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get the current user's warung state
  */
+
+
+
 export const GetWarungStateResponse = zod.object({
   "state": zod.object({
   "menus": zod.array(zod.record(zod.string(), zod.unknown())),
@@ -36,6 +39,7 @@ export const GetWarungStateResponse = zod.object({
   "savingsEntries": zod.array(zod.record(zod.string(), zod.unknown())),
   "qrisImageUri": zod.string().nullish()
 }),
+  "version": zod.number().int().min(1),
   "updatedAt": zod.coerce.date()
 })
 
@@ -43,6 +47,9 @@ export const GetWarungStateResponse = zod.object({
 /**
  * @summary Save the current user's warung state
  */
+
+
+
 export const SaveWarungStateBody = zod.object({
   "state": zod.object({
   "menus": zod.array(zod.record(zod.string(), zod.unknown())),
@@ -58,8 +65,12 @@ export const SaveWarungStateBody = zod.object({
   "savingsRules": zod.array(zod.record(zod.string(), zod.unknown())),
   "savingsEntries": zod.array(zod.record(zod.string(), zod.unknown())),
   "qrisImageUri": zod.string().nullish()
+}),
+  "baseVersion": zod.number().int().min(1).nullable().describe('Version read before editing; null when creating the first snapshot')
 })
-})
+
+
+
 
 export const SaveWarungStateResponse = zod.object({
   "state": zod.object({
@@ -77,6 +88,7 @@ export const SaveWarungStateResponse = zod.object({
   "savingsEntries": zod.array(zod.record(zod.string(), zod.unknown())),
   "qrisImageUri": zod.string().nullish()
 }),
+  "version": zod.number().int().min(1),
   "updatedAt": zod.coerce.date()
 })
 

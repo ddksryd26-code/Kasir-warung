@@ -67,6 +67,12 @@ paths:
           description: Invalid state
         "401":
           description: Authentication required
+        "409":
+          description: The snapshot is based on an older version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarungStateConflict"
 components:
   securitySchemes:
     bearerAuth:
@@ -163,17 +169,47 @@ components:
       type: object
       required:
         - state
+        - baseVersion
       properties:
         state:
           $ref: "#/components/schemas/WarungState"
+        baseVersion:
+          type:
+            - integer
+            - "null"
+          minimum: 1
+          description: Version read before editing; null when creating the first snapshot
     WarungStateResponse:
       type: object
       required:
         - state
+        - version
         - updatedAt
       properties:
         state:
           $ref: "#/components/schemas/WarungState"
+        version:
+          type: integer
+          minimum: 1
+        updatedAt:
+          type: string
+          format: date-time
+    WarungStateConflict:
+      type: object
+      required:
+        - error
+        - state
+        - version
+        - updatedAt
+      properties:
+        error:
+          type: string
+          enum: [WARUNG_STATE_CONFLICT]
+        state:
+          $ref: "#/components/schemas/WarungState"
+        version:
+          type: integer
+          minimum: 1
         updatedAt:
           type: string
           format: date-time

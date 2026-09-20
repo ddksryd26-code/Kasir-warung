@@ -53,10 +53,33 @@ export interface WarungState {
 
 export interface SaveWarungStateBody {
   state: WarungState;
+  /**
+     * Version read before editing; null when creating the first snapshot
+     * @minimum 1
+     * @nullable
+     */
+  baseVersion: number | null;
 }
 
 export interface WarungStateResponse {
   state: WarungState;
+  /** @minimum 1 */
+  version: number;
+  updatedAt: string;
+}
+
+export type WarungStateConflictError = typeof WarungStateConflictError[keyof typeof WarungStateConflictError];
+
+
+export const WarungStateConflictError = {
+  WARUNG_STATE_CONFLICT: 'WARUNG_STATE_CONFLICT',
+} as const;
+
+export interface WarungStateConflict {
+  error: WarungStateConflictError;
+  state: WarungState;
+  /** @minimum 1 */
+  version: number;
   updatedAt: string;
 }
 

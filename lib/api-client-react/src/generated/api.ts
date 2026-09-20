@@ -22,6 +22,7 @@ import type {
 import type {
   HealthStatus,
   SaveWarungStateBody,
+  WarungStateConflict,
   WarungStateResponse
 } from './api.schemas';
 
@@ -249,7 +250,7 @@ return customFetch<WarungStateResponse>(getSaveWarungStateUrl(),
 
 export const getSaveWarungStateMutationKey = () => ['saveWarungState'] as const;
 
-export const getSaveWarungStateMutationOptions = <TError = ErrorType<void>,
+export const getSaveWarungStateMutationOptions = <TError = ErrorType<void | WarungStateConflict>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveWarungState>>, TError,SaveWarungStateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveWarungState>>, TError,SaveWarungStateMutationVariables, TContext> => {
 
@@ -278,13 +279,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveWarungStateMutationResult = NonNullable<Awaited<ReturnType<typeof saveWarungState>>>
     export type SaveWarungStateMutationBody = BodyType<SaveWarungStateBody>
-    export type SaveWarungStateMutationError = ErrorType<void>
+    export type SaveWarungStateMutationError = ErrorType<void | WarungStateConflict>
     export type SaveWarungStateMutationVariables = {data: BodyType<SaveWarungStateBody>}
 
     /**
  * @summary Save the current user's warung state
  */
-export const useSaveWarungState = <TError = ErrorType<void>,
+export const useSaveWarungState = <TError = ErrorType<void | WarungStateConflict>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveWarungState>>, TError,SaveWarungStateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof saveWarungState>>,

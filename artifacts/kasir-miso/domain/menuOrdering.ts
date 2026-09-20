@@ -2,11 +2,18 @@ import type { MenuItem, WarungState } from '@/context/WarungContext';
 import { normalizeShoppingExpenses } from './shoppingExpenses';
 
 export const WARUNG_STATE_STORAGE_KEY = 'warung-state-v2';
+export const WARUNG_SYNC_METADATA_KEY = `${WARUNG_STATE_STORAGE_KEY}:sync`;
 
 export function getWarungStateStorageKey(userId?: string | null) {
   return userId
     ? `${WARUNG_STATE_STORAGE_KEY}:account:${encodeURIComponent(userId)}`
     : WARUNG_STATE_STORAGE_KEY;
+}
+
+export function getWarungSyncMetadataKey(userId?: string | null) {
+  return userId
+    ? `${WARUNG_SYNC_METADATA_KEY}:account:${encodeURIComponent(userId)}`
+    : WARUNG_SYNC_METADATA_KEY;
 }
 
 export function createDefaultWarungState(): WarungState {

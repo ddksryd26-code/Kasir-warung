@@ -9,4 +9,10 @@ import type { WarungState } from './warungState';
 
 export interface SaveWarungStateBody {
   state: WarungState;
+  /**
+     * Version read before editing; null when creating the first snapshot
+     * @minimum 1
+     * @nullable
+     */
+  baseVersion: number | null;
 }

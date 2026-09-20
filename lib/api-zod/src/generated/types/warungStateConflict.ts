@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { WarungState } from './warungState';
+import type { WarungStateConflictError } from './warungStateConflictError';
 
-export interface WarungStateResponse {
+export interface WarungStateConflict {
+  error: WarungStateConflictError;
   state: WarungState;
   /** @minimum 1 */
   version: number;

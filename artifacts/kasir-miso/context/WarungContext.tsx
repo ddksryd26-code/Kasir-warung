@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useAuth } from '@clerk/expo';
 import { saveWarungState, getWarungState } from '@workspace/api-client-react';
@@ -14,8 +14,10 @@ import {
   persistWarungState,
   persistWarungStateSafely,
   reorderMenuItems,
+  getWarungSyncMetadataKey,
   WARUNG_STATE_STORAGE_KEY,
 } from '@/domain/menuOrdering';
+import { mergeWarungStates, parseSyncMetadata, stateSnapshotKey, type SyncMetadata } from '@/domain/syncConflict';
 
 export type MenuKey = string;
 export type PaymentMethod = 'Tunai' | 'QRIS';
@@ -157,8 +159,17 @@ type ApiWarungState = Parameters<typeof saveWarungState>[0]['state'];
 
 const toApiWarungState = (value: WarungState) => value as unknown as ApiWarungState;
 
+export type SyncConflict = {
+  localState: WarungState;
+  remoteState: WarungState;
+  remoteVersion: number;
+  remoteUpdatedAt: string;
+};
+
 interface ContextValue extends WarungState {
   hydrated: boolean;
+  syncConflict: SyncConflict | null;
+  resolveSyncConflict: (choice: 'local' | 'remote' | 'merge') => Promise<void>;
   restoreState: (nextState: unknown) => Promise<void>;
   addMenu: (name: string, price: number, recipe?: Record<string, number>, category?: string, imageUri?: string, variants?: MenuVariant[]) => void;
   updateMenu: (id: string, name: string, price: number, recipe?: Record<string, number>, category?: string, imageUri?: string, variants?: MenuVariant[]) => void;
@@ -208,46 +219,90 @@ function WarungStateProvider({
 }) {
   const [state, setState] = useState<WarungState>(createDefaultWarungState);
   const [hydrated, setHydrated] = useState(false);
+  const [syncConflict, setSyncConflict] = useState<SyncConflict | null>(null);
   const storageKey = getWarungStateStorageKey(userId);
+  const syncMetadataKey = getWarungSyncMetadataKey(userId);
+  const remoteVersionRef = useRef<number | null>(null);
+  const lastSyncedStateRef = useRef<WarungState | null>(null);
+  const syncInFlightRef = useRef(false);
+
   useEffect(() => {
     if (!authLoaded) return;
     let mounted = true;
     setHydrated(false);
     setState(createDefaultWarungState());
+    setSyncConflict(null);
+    remoteVersionRef.current = null;
+    lastSyncedStateRef.current = null;
 
     const loadState = async () => {
       const localRaw = await AsyncStorage.getItem(storageKey);
       const legacyRaw = userId && localRaw === null
         ? await AsyncStorage.getItem(WARUNG_STATE_STORAGE_KEY)
         : null;
-      let nextState = await hydrateWarungState(localRaw ?? legacyRaw, persistImageUri);
+      const localState = await hydrateWarungState(localRaw ?? legacyRaw, persistImageUri);
+      const storedMetadata = parseSyncMetadata(await AsyncStorage.getItem(syncMetadataKey));
+      let nextState = localState;
+      let nextVersion = storedMetadata?.version ?? null;
+      let nextSyncedState = storedMetadata?.syncedState ?? null;
+      let nextConflict: SyncConflict | null = null;
+      let uploadedInitialState = false;
 
       if (userId) {
         try {
           const remote = await getWarungState();
-          if (isRestorableWarungState(remote.state)) {
-            nextState = await hydrateWarungState(JSON.stringify(remote.state), persistImageUri);
+          const remoteState = await hydrateWarungState(JSON.stringify(remote.state), persistImageUri);
+          const localChangedSinceSync = storedMetadata
+            ? stateSnapshotKey(localState) !== stateSnapshotKey(storedMetadata.syncedState)
+            : Boolean(localRaw || legacyRaw);
+
+          if (localChangedSinceSync && storedMetadata?.version === remote.version) {
+            nextState = localState;
+          } else if (localChangedSinceSync) {
+            nextState = localState;
+            nextConflict = {
+              localState,
+              remoteState,
+              remoteVersion: remote.version,
+              remoteUpdatedAt: remote.updatedAt,
+            };
+          } else {
+            nextState = remoteState;
           }
+          nextVersion = remote.version;
+          nextSyncedState = remoteState;
         } catch (error) {
-          if ((error as { status?: number }).status !== 404) {
-            // Keep the local snapshot when the device is offline or the API is unavailable.
-          }
           if ((error as { status?: number }).status === 404) {
             try {
-              await saveWarungState({ state: toApiWarungState(nextState) });
+              const saved = await saveWarungState({
+                state: toApiWarungState(nextState),
+                baseVersion: null,
+              });
+              nextVersion = saved.version;
+              nextSyncedState = nextState;
+              uploadedInitialState = true;
             } catch {
-              // Keep the local snapshot when the first cloud upload is offline.
+              // Keep the local snapshot until the next online change.
             }
           }
         }
       }
 
       await persistWarungState(nextState, AsyncStorage.setItem, storageKey);
-      if (userId && legacyRaw !== null) {
+      if (userId && nextSyncedState && !nextConflict) {
+        await AsyncStorage.setItem(syncMetadataKey, JSON.stringify({
+          version: nextVersion,
+          syncedState: nextSyncedState,
+        } satisfies SyncMetadata));
+      }
+      if (userId && legacyRaw !== null && (uploadedInitialState || !nextConflict)) {
         await AsyncStorage.removeItem(WARUNG_STATE_STORAGE_KEY);
       }
       if (mounted) {
+        remoteVersionRef.current = nextVersion;
+        lastSyncedStateRef.current = nextSyncedState;
         setState(nextState);
+        setSyncConflict(nextConflict);
         setHydrated(true);
       }
     };
@@ -259,34 +314,104 @@ function WarungStateProvider({
       }
     });
     return () => { mounted = false; };
-  }, [authLoaded, storageKey, userId]);
+  }, [authLoaded, storageKey, syncMetadataKey, userId]);
   useEffect(() => {
     if (hydrated) {
       void persistWarungState(state, AsyncStorage.setItem, storageKey);
     }
   }, [hydrated, state, storageKey]);
   useEffect(() => {
-    if (!hydrated || !userId) return;
+    if (!hydrated || !userId || syncConflict) return;
+    if (lastSyncedStateRef.current && stateSnapshotKey(lastSyncedStateRef.current) === stateSnapshotKey(state)) return;
+
     const timeout = setTimeout(() => {
-      void saveWarungState({ state: toApiWarungState(state) }).catch(() => {
-        // AsyncStorage remains the source of truth while offline; retry on the next change.
+      if (syncInFlightRef.current) return;
+      syncInFlightRef.current = true;
+      void saveWarungState({
+        state: toApiWarungState(state),
+        baseVersion: remoteVersionRef.current,
+      }).then(async (saved) => {
+        remoteVersionRef.current = saved.version;
+        lastSyncedStateRef.current = saved.state as unknown as WarungState;
+        await AsyncStorage.setItem(syncMetadataKey, JSON.stringify({
+          version: saved.version,
+          syncedState: saved.state as unknown as WarungState,
+        } satisfies SyncMetadata));
+      }).catch((error: unknown) => {
+        const payload = (error as { data?: unknown }).data;
+        const status = (error as { status?: number }).status;
+        if (
+          status === 409
+          && payload
+          && typeof payload === 'object'
+          && 'state' in payload
+          && 'version' in payload
+          && 'updatedAt' in payload
+          && isRestorableWarungState(payload.state)
+          && typeof payload.version === 'number'
+          && typeof payload.updatedAt === 'string'
+        ) {
+          setSyncConflict({
+            localState: state,
+            remoteState: payload.state as WarungState,
+            remoteVersion: payload.version,
+            remoteUpdatedAt: payload.updatedAt,
+          });
+        }
+      }).finally(() => {
+        syncInFlightRef.current = false;
       });
     }, 750);
     return () => clearTimeout(timeout);
-  }, [hydrated, state, userId]);
+  }, [hydrated, state, syncConflict, syncMetadataKey, userId]);
   useEffect(() => {
     if (!hydrated || !userId) return;
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState !== 'active') return;
-      void saveWarungState({ state: toApiWarungState(state) }).catch(() => {
-        // Keep the local snapshot when the API is still unavailable.
+      if (syncConflict || syncInFlightRef.current) return;
+      void saveWarungState({
+        state: toApiWarungState(state),
+        baseVersion: remoteVersionRef.current,
+      }).then(async (saved) => {
+        remoteVersionRef.current = saved.version;
+        lastSyncedStateRef.current = saved.state as unknown as WarungState;
+        await AsyncStorage.setItem(syncMetadataKey, JSON.stringify({
+          version: saved.version,
+          syncedState: saved.state as unknown as WarungState,
+        } satisfies SyncMetadata));
+      }).catch(() => {
+        // Keep the local snapshot and let the conflict-aware effect retry.
       });
     });
     return () => subscription.remove();
-  }, [hydrated, state, userId]);
+  }, [hydrated, state, syncConflict, syncMetadataKey, userId]);
+  const resolveSyncConflict = async (choice: 'local' | 'remote' | 'merge') => {
+    if (!syncConflict || !userId) return;
+    const chosenState = choice === 'remote'
+      ? syncConflict.remoteState
+      : choice === 'merge'
+        ? mergeWarungStates(syncConflict.localState, syncConflict.remoteState)
+        : syncConflict.localState;
+    const saved = await saveWarungState({
+      state: toApiWarungState(chosenState),
+      baseVersion: syncConflict.remoteVersion,
+    });
+    remoteVersionRef.current = saved.version;
+    lastSyncedStateRef.current = saved.state as unknown as WarungState;
+    await persistWarungState(saved.state as unknown as WarungState, AsyncStorage.setItem, storageKey);
+    await AsyncStorage.setItem(syncMetadataKey, JSON.stringify({
+      version: saved.version,
+      syncedState: saved.state as unknown as WarungState,
+    } satisfies SyncMetadata));
+    await AsyncStorage.removeItem(WARUNG_STATE_STORAGE_KEY);
+    setState(saved.state as unknown as WarungState);
+    setSyncConflict(null);
+  };
   const value = useMemo<ContextValue>(() => ({
     ...state,
     hydrated,
+    syncConflict,
+    resolveSyncConflict,
     restoreState: async nextState => {
       if (!isRestorableWarungState(nextState)) {
         throw new Error('Data backup tidak memiliki bentuk state Kasir Miso yang valid.');
@@ -598,7 +723,7 @@ function WarungStateProvider({
        }),
      deleteSavingsRule: id => setState(s => ({ ...s, savingsRules: s.savingsRules.filter((rule) => rule.id !== id) })),
     setQrisImageUri: qrisImageUri => setState(s => ({ ...s, qrisImageUri })),
-  }), [hydrated, state, storageKey]);
+  }), [hydrated, resolveSyncConflict, state, storageKey, syncConflict]);
   return <WarungContext.Provider value={value}>{children}</WarungContext.Provider>;
 }
 

@@ -12,6 +12,8 @@ export * from './warungState';
 export * from './warungStateActiveOrdersItem';
 export * from './warungStateAuditTrailItem';
 export * from './warungStateCashClosuresItem';
+export * from './warungStateConflict';
+export * from './warungStateConflictError';
 export * from './warungStateConsignmentsItem';
 export * from './warungStateExpensesItem';
 export * from './warungStateInventoryItem';
