@@ -83,3 +83,15 @@ export interface WarungStateConflict {
   updatedAt: string;
 }
 
+export interface SaveDriveBackupBody {
+  state: WarungState;
+}
+
+export interface SaveDriveBackupResponse {
+  id: string;
+  name: string;
+  /** @nullable */
+  webViewLink: string | null;
+  createdAt: string;
+}
+

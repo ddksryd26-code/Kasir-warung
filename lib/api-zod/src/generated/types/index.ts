@@ -7,6 +7,8 @@
  */
 
 export * from './healthStatus';
+export * from './saveDriveBackupBody';
+export * from './saveDriveBackupResponse';
 export * from './saveWarungStateBody';
 export * from './warungState';
 export * from './warungStateActiveOrdersItem';

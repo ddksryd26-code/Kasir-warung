@@ -93,3 +93,32 @@ export const SaveWarungStateResponse = zod.object({
 })
 
 
+/**
+ * @summary Save the current user's warung state to Google Drive
+ */
+export const SaveDriveBackupBody = zod.object({
+  "state": zod.object({
+  "menus": zod.array(zod.record(zod.string(), zod.unknown())),
+  "activeOrders": zod.array(zod.record(zod.string(), zod.unknown())),
+  "kitchenOrders": zod.array(zod.record(zod.string(), zod.unknown())),
+  "inventory": zod.array(zod.record(zod.string(), zod.unknown())),
+  "stockMovements": zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  "consignments": zod.array(zod.record(zod.string(), zod.unknown())),
+  "expenses": zod.array(zod.record(zod.string(), zod.unknown())),
+  "sales": zod.array(zod.record(zod.string(), zod.unknown())),
+  "auditTrail": zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  "cashClosures": zod.array(zod.record(zod.string(), zod.unknown())),
+  "savingsRules": zod.array(zod.record(zod.string(), zod.unknown())),
+  "savingsEntries": zod.array(zod.record(zod.string(), zod.unknown())),
+  "qrisImageUri": zod.string().nullish()
+})
+})
+
+export const SaveDriveBackupResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "webViewLink": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+

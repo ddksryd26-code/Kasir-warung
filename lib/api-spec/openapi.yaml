@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: warung
     description: Authenticated warung data
+  - name: drive
+    description: Google Drive backups
 paths:
   /healthz:
     get:
@@ -73,6 +75,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WarungStateConflict"
+  /drive/backup:
+    post:
+      operationId: saveDriveBackup
+      tags: [drive]
+      summary: Save the current user's warung state to Google Drive
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveDriveBackupBody"
+      responses:
+        "200":
+          description: The created Google Drive backup file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaveDriveBackupResponse"
+        "400":
+          description: Invalid state
+        "401":
+          description: Authentication required
+        "502":
+          description: Google Drive upload failed
 components:
   securitySchemes:
     bearerAuth:
@@ -211,6 +239,32 @@ components:
           type: integer
           minimum: 1
         updatedAt:
+          type: string
+          format: date-time
+    SaveDriveBackupBody:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          $ref: "#/components/schemas/WarungState"
+    SaveDriveBackupResponse:
+      type: object
+      required:
+        - id
+        - name
+        - webViewLink
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        webViewLink:
+          type:
+            - string
+            - "null"
+        createdAt:
           type: string
           format: date-time
 

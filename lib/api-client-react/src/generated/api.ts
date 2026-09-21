@@ -21,6 +21,8 @@ import type {
 
 import type {
   HealthStatus,
+  SaveDriveBackupBody,
+  SaveDriveBackupResponse,
   SaveWarungStateBody,
   WarungStateConflict,
   WarungStateResponse
@@ -294,5 +296,93 @@ export const useSaveWarungState = <TError = ErrorType<void | WarungStateConflict
         TContext
       > => {
       return useMutation(getSaveWarungStateMutationOptions(options));
+    }
+
+export const getSaveDriveBackupUrl = () => {
+
+
+
+
+  return `/api/drive/backup`
+}
+
+/**
+ * @summary Save the current user's warung state to Google Drive
+ */
+export const saveDriveBackup = async (saveDriveBackupBody: SaveDriveBackupBody, options?: Parameters<typeof customFetch>[1]): Promise<SaveDriveBackupResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SaveDriveBackupResponse>(getSaveDriveBackupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveDriveBackupBody)
+  }
+);}
+
+
+
+
+
+export const getSaveDriveBackupMutationKey = () => ['saveDriveBackup'] as const;
+
+export const getSaveDriveBackupMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDriveBackup>>, TError,SaveDriveBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveDriveBackup>>, TError,SaveDriveBackupMutationVariables, TContext> => {
+
+const mutationKey = getSaveDriveBackupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveDriveBackup>>, SaveDriveBackupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveDriveBackup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveDriveBackupMutationResult = NonNullable<Awaited<ReturnType<typeof saveDriveBackup>>>
+    export type SaveDriveBackupMutationBody = BodyType<SaveDriveBackupBody>
+    export type SaveDriveBackupMutationError = ErrorType<void>
+    export type SaveDriveBackupMutationVariables = {data: BodyType<SaveDriveBackupBody>}
+
+    /**
+ * @summary Save the current user's warung state to Google Drive
+ */
+export const useSaveDriveBackup = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDriveBackup>>, TError,SaveDriveBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveDriveBackup>>,
+        TError,
+        SaveDriveBackupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveDriveBackupMutationOptions(options));
     }
 
