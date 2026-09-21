@@ -69,6 +69,9 @@ export default function OtherScreen() {
   const { isSignedIn } = useAuth();
   const { isLoaded: isUserLoaded, user } = useUser();
   const { signOut } = useClerk();
+  const offlineBackupKey = user?.id
+    ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(user.id)}`
+    : `${OFFLINE_BACKUP_KEY}:guest`;
   const [notice, setNotice] = useState('');
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoringOffline, setIsRestoringOffline] = useState(false);
@@ -106,7 +109,7 @@ export default function OtherScreen() {
     try {
       const backup = createBackup();
       const backupJson = JSON.stringify(backup);
-      await AsyncStorage.setItem(OFFLINE_BACKUP_KEY, backupJson);
+      await AsyncStorage.setItem(offlineBackupKey, backupJson);
 
       if (Platform.OS === 'web') {
         const blob = new Blob([backupJson], { type: 'application/json;charset=utf-8' });
@@ -169,7 +172,7 @@ export default function OtherScreen() {
   const handleOfflineRestore = async () => {
     if (isRestoringOffline) return;
     try {
-      const raw = await AsyncStorage.getItem(OFFLINE_BACKUP_KEY);
+      const raw = await AsyncStorage.getItem(offlineBackupKey);
       if (!raw) {
         setNotice('Belum ada cadangan offline di perangkat ini. Buat Backup Offline terlebih dahulu.');
         return;

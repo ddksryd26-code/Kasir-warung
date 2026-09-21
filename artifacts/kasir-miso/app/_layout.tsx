@@ -14,7 +14,7 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import * as Font from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import { WarungProvider } from '@/context/WarungContext';
@@ -50,6 +50,8 @@ if (Platform.OS !== 'web') {
 }
 
 function RootLayoutNav() {
+  const { isSignedIn } = useAuth();
+
   return (
     <>
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
@@ -62,8 +64,12 @@ function RootLayoutNav() {
         <Stack.Screen name="stock-edit" options={{ headerShown: false }} />
         <Stack.Screen name="cash-flow" options={{ headerShown: false }} />
       </Stack>
-      <SyncConflictPrompt />
-      <FirstLaunchTutorial />
+      {isSignedIn ? (
+        <>
+          <SyncConflictPrompt />
+          <FirstLaunchTutorial />
+        </>
+      ) : null}
     </>
   );
 }
@@ -157,6 +163,50 @@ function ClerkApiBridge({ children }: { children: React.ReactNode }) {
   return children;
 }
 
+function AuthLoadingScreen() {
+  return (
+    <View style={authGateStyles.container}>
+      <ActivityIndicator size="large" color="#D95D39" />
+      <Text style={authGateStyles.title}>Menyiapkan akun...</Text>
+      <Text style={authGateStyles.body}>Sebentar, kami memeriksa sesi Kasir Miso.</Text>
+    </View>
+  );
+}
+
+function AuthConfigurationScreen() {
+  return (
+    <View style={authGateStyles.container}>
+      <Ionicons name="shield-outline" size={42} color="#D95D39" />
+      <Text style={authGateStyles.title}>Login belum dikonfigurasi</Text>
+      <Text style={authGateStyles.body}>
+        Kasir Miso membutuhkan konfigurasi Clerk sebelum dapat digunakan oleh banyak akun.
+      </Text>
+    </View>
+  );
+}
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  const isSignInRoute = pathname === '/sign-in';
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn && !isSignInRoute) {
+      router.replace('/sign-in');
+    } else if (isSignedIn && isSignInRoute) {
+      router.replace('/(tabs)/other');
+    }
+  }, [isLoaded, isSignedIn, isSignInRoute, router]);
+
+  if (!isLoaded) return <AuthLoadingScreen />;
+  if ((!isSignedIn && !isSignInRoute) || (isSignedIn && isSignInRoute)) {
+    return <AuthLoadingScreen />;
+  }
+  return <>{children}</>;
+}
+
 function AppProviders({ withClerk }: { withClerk: boolean }) {
   const app = (
     <ThemeProvider>
@@ -174,7 +224,7 @@ function AppProviders({ withClerk }: { withClerk: boolean }) {
     </ThemeProvider>
   );
 
-  return withClerk ? <ClerkApiBridge>{app}</ClerkApiBridge> : app;
+  return app;
 }
 
 const syncStyles = StyleSheet.create({
@@ -249,7 +299,7 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 
-  if (!clerkPublishableKey) return app;
+  if (!clerkPublishableKey) return <AuthConfigurationScreen />;
 
   return (
     <ClerkProvider
@@ -257,7 +307,36 @@ export default function RootLayout() {
       tokenCache={tokenCache}
       proxyUrl={clerkProxyUrl}
     >
-      <ClerkLoaded>{app}</ClerkLoaded>
+      <ClerkLoaded>
+        <AuthGate>
+          <ClerkApiBridge>{app}</ClerkApiBridge>
+        </AuthGate>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }
+
+const authGateStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
+    backgroundColor: '#FFF9F2',
+  },
+  title: {
+    color: '#241A17',
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  body: {
+    color: '#756A64',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+    maxWidth: 320,
+    textAlign: 'center',
+  },
+});

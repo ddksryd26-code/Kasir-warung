@@ -1,1 +1,2 @@
 - [Artifact import lifecycle](artifact-import.md) — preserve generated artifact metadata when merging uploaded app source.
+- [Clerk auth gate in Expo](clerk-auth-gate.md) — use effect-based redirects from the root layout to avoid blank previews.
