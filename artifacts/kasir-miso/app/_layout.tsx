@@ -193,17 +193,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn && !isSignInRoute) {
-      router.replace('/sign-in');
-    } else if (isSignedIn && isSignInRoute) {
+    if (isSignedIn && isSignInRoute) {
       router.replace('/(tabs)/other');
     }
   }, [isLoaded, isSignedIn, isSignInRoute, router]);
 
   if (!isLoaded) return <AuthLoadingScreen />;
-  if ((!isSignedIn && !isSignInRoute) || (isSignedIn && isSignInRoute)) {
-    return <AuthLoadingScreen />;
-  }
   return <>{children}</>;
 }
 
