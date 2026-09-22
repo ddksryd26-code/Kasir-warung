@@ -3,8 +3,8 @@ name: Google Drive backup authentication
 description: Durable credential-handling decision for Kasir Miso Google Drive backups.
 ---
 
-Kasir Miso uses the Replit-managed Google Drive connector and OAuth flow for Drive backups. The app must not ask users to paste a client secret, access token, or refresh token into a form or chat.
+Kasir Miso uses a per-user Google OAuth connection for Drive backups. Each signed-in Clerk user has a separate encrypted token record and uploads into that user's Google Drive. The app must not ask users to paste an access token or refresh token into a form or chat.
 
-**Why:** The user requested three Google credential values, but Replit integrations already provide managed OAuth, token refresh, and scoped access without exposing credentials to the application or storing them in backup data.
+**Why:** The product requirement is one Google Drive per Kasir Miso account. A single Replit-managed connector connection would share one Drive across all app users, so OAuth authorization must happen per user while client secrets and tokens stay server-side.
 
-**How to apply:** Keep Drive calls server-side through the connector, protect backup routes with the app's existing authentication, and use Replit Secrets only for configuration values that are not supplied by an integration.
+**How to apply:** Protect Drive routes with Clerk, exchange PKCE authorization codes on the server, encrypt refresh/access tokens before storing them, and use each user's token for Drive API calls. Keep OAuth client credentials and the encryption key in Replit Secrets.

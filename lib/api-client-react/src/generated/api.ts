@@ -20,6 +20,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ConnectDriveBody,
+  DisconnectDriveResponse,
+  DriveConnectionResponse,
   HealthStatus,
   SaveDriveBackupBody,
   SaveDriveBackupResponse,
@@ -384,5 +387,244 @@ export const useSaveDriveBackup = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSaveDriveBackupMutationOptions(options));
+    }
+
+export const getGetDriveConnectionUrl = () => {
+
+
+
+
+  return `/api/drive/connection`
+}
+
+/**
+ * @summary Get the current user's Google Drive connection
+ */
+export const getDriveConnection = async ( options?: Parameters<typeof customFetch>[1]): Promise<DriveConnectionResponse> => {
+
+  return customFetch<DriveConnectionResponse>(getGetDriveConnectionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDriveConnectionQueryKey = () => {
+    return [
+    `/api/drive/connection`
+    ] as const;
+    }
+
+
+export const getGetDriveConnectionQueryOptions = <TData = Awaited<ReturnType<typeof getDriveConnection>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDriveConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDriveConnectionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDriveConnection>>> = ({ signal }) => getDriveConnection({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDriveConnection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDriveConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof getDriveConnection>>>
+export type GetDriveConnectionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the current user's Google Drive connection
+ */
+
+export function useGetDriveConnection<TData = Awaited<ReturnType<typeof getDriveConnection>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDriveConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDriveConnectionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConnectDriveUrl = () => {
+
+
+
+
+  return `/api/drive/oauth/exchange`
+}
+
+/**
+ * @summary Connect the current user's Google Drive account
+ */
+export const connectDrive = async (connectDriveBody: ConnectDriveBody, options?: Parameters<typeof customFetch>[1]): Promise<DriveConnectionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DriveConnectionResponse>(getConnectDriveUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(connectDriveBody)
+  }
+);}
+
+
+
+
+
+export const getConnectDriveMutationKey = () => ['connectDrive'] as const;
+
+export const getConnectDriveMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectDrive>>, TError,ConnectDriveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof connectDrive>>, TError,ConnectDriveMutationVariables, TContext> => {
+
+const mutationKey = getConnectDriveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectDrive>>, ConnectDriveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  connectDrive(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectDriveMutationResult = NonNullable<Awaited<ReturnType<typeof connectDrive>>>
+    export type ConnectDriveMutationBody = BodyType<ConnectDriveBody>
+    export type ConnectDriveMutationError = ErrorType<void>
+    export type ConnectDriveMutationVariables = {data: BodyType<ConnectDriveBody>}
+
+    /**
+ * @summary Connect the current user's Google Drive account
+ */
+export const useConnectDrive = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectDrive>>, TError,ConnectDriveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof connectDrive>>,
+        TError,
+        ConnectDriveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConnectDriveMutationOptions(options));
+    }
+
+export const getDisconnectDriveUrl = () => {
+
+
+
+
+  return `/api/drive/oauth/disconnect`
+}
+
+/**
+ * @summary Disconnect the current user's Google Drive account
+ */
+export const disconnectDrive = async ( options?: Parameters<typeof customFetch>[1]): Promise<DisconnectDriveResponse> => {
+
+  return customFetch<DisconnectDriveResponse>(getDisconnectDriveUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDisconnectDriveMutationKey = () => ['disconnectDrive'] as const;
+
+export const getDisconnectDriveMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectDrive>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectDrive>>, TError,void, TContext> => {
+
+const mutationKey = getDisconnectDriveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectDrive>>, void> = () => {
+
+
+          return  disconnectDrive(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectDriveMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectDrive>>>
+
+    export type DisconnectDriveMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Disconnect the current user's Google Drive account
+ */
+export const useDisconnectDrive = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectDrive>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectDrive>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDisconnectDriveMutationOptions(options));
     }
 

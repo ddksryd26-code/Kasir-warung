@@ -99,8 +99,68 @@ paths:
           description: Invalid state
         "401":
           description: Authentication required
+        "409":
+          description: Google Drive is not connected for this account
         "502":
           description: Google Drive upload failed
+  /drive/connection:
+    get:
+      operationId: getDriveConnection
+      tags: [drive]
+      summary: Get the current user's Google Drive connection
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Google Drive connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveConnectionResponse"
+        "401":
+          description: Authentication required
+  /drive/oauth/exchange:
+    post:
+      operationId: connectDrive
+      tags: [drive]
+      summary: Connect the current user's Google Drive account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectDriveBody"
+      responses:
+        "200":
+          description: Google Drive connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveConnectionResponse"
+        "400":
+          description: Invalid OAuth exchange
+        "401":
+          description: Authentication required
+        "502":
+          description: Google OAuth exchange failed
+  /drive/oauth/disconnect:
+    delete:
+      operationId: disconnectDrive
+      tags: [drive]
+      summary: Disconnect the current user's Google Drive account
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Google Drive disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisconnectDriveResponse"
+        "401":
+          description: Authentication required
 components:
   securitySchemes:
     bearerAuth:
@@ -267,4 +327,45 @@ components:
         createdAt:
           type: string
           format: date-time
+    DriveConnectionResponse:
+      type: object
+      required:
+        - connected
+        - email
+        - connectedAt
+      properties:
+        connected:
+          type: boolean
+        email:
+          type:
+            - string
+            - "null"
+        connectedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+    ConnectDriveBody:
+      type: object
+      required:
+        - code
+        - redirectUri
+        - codeVerifier
+      properties:
+        code:
+          type: string
+          minLength: 1
+        redirectUri:
+          type: string
+          minLength: 1
+        codeVerifier:
+          type: string
+          minLength: 43
+    DisconnectDriveResponse:
+      type: object
+      required:
+        - disconnected
+      properties:
+        disconnected:
+          type: boolean
 

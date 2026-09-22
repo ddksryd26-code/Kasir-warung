@@ -95,3 +95,24 @@ export interface SaveDriveBackupResponse {
   createdAt: string;
 }
 
+export interface DriveConnectionResponse {
+  connected: boolean;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  connectedAt: string | null;
+}
+
+export interface ConnectDriveBody {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  redirectUri: string;
+  /** @minLength 43 */
+  codeVerifier: string;
+}
+
+export interface DisconnectDriveResponse {
+  disconnected: boolean;
+}
+

@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './connectDriveBody';
+export * from './disconnectDriveResponse';
+export * from './driveConnectionResponse';
 export * from './healthStatus';
 export * from './saveDriveBackupBody';
 export * from './saveDriveBackupResponse';

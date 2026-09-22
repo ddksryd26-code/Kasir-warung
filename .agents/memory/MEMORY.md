@@ -1,3 +1,3 @@
 - [Artifact import lifecycle](artifact-import.md) — preserve generated artifact metadata when merging uploaded app source.
 - [Clerk auth gate in Expo](clerk-auth-gate.md) — use effect-based redirects from the root layout to avoid blank previews.
-- [Google Drive backup auth](google-drive-backup.md) — use the Replit-managed Google Drive OAuth connection; never collect client secrets or tokens in the app.
+- [Google Drive backup auth](google-drive-backup.md) — use per-user Google OAuth with encrypted server-side tokens; never collect tokens in the app.

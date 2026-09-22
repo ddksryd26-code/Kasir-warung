@@ -122,3 +122,43 @@ export const SaveDriveBackupResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the current user's Google Drive connection
+ */
+export const GetDriveConnectionResponse = zod.object({
+  "connected": zod.boolean(),
+  "email": zod.string().nullable(),
+  "connectedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Connect the current user's Google Drive account
+ */
+
+
+export const connectDriveBodyCodeVerifierMin = 43;
+
+
+
+export const ConnectDriveBody = zod.object({
+  "code": zod.string().min(1),
+  "redirectUri": zod.string().min(1),
+  "codeVerifier": zod.string().min(connectDriveBodyCodeVerifierMin)
+})
+
+export const ConnectDriveResponse = zod.object({
+  "connected": zod.boolean(),
+  "email": zod.string().nullable(),
+  "connectedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Disconnect the current user's Google Drive account
+ */
+export const DisconnectDriveResponse = zod.object({
+  "disconnected": zod.boolean()
+})
+
+

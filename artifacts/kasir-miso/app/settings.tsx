@@ -1,7 +1,18 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as AuthSession from 'expo-auth-session';
+import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSaveDriveBackup, type SaveDriveBackupBody } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  getGetDriveConnectionQueryKey,
+  useConnectDrive,
+  useDisconnectDrive,
+  useGetDriveConnection,
+  useSaveDriveBackup,
+  type SaveDriveBackupBody,
+} from '@workspace/api-client-react';
 import { PageHeader, PrimaryButton, Screen, Surface, ThemeActions } from '@/components/WarungUI';
 import { themeOptions } from '@/constants/colors';
 import { useColors } from '@/hooks/useColors';
@@ -60,19 +71,93 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { mode, themeId, selectTheme, toggleMode } = useTheme();
   const warung = useWarung();
+  const queryClient = useQueryClient();
+  const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ?? '';
+  const driveRedirectUri = AuthSession.makeRedirectUri({
+    scheme: 'com.kasirwarung.app',
+    path: 'drive-callback',
+  });
+  const [driveRequest, driveResponse, promptDriveAsync] = useAuthRequest(
+    {
+      clientId: googleClientId,
+      scopes: ['openid', 'email', 'https://www.googleapis.com/auth/drive.file'],
+      responseType: AuthSession.ResponseType.Code,
+      selectAccount: true,
+      shouldAutoExchangeCode: false,
+      extraParams: { access_type: 'offline', prompt: 'consent' },
+    },
+    { scheme: 'com.kasirwarung.app', path: 'drive-callback' },
+  );
+  const [driveNotice, setDriveNotice] = useState('');
+  const handledDriveCode = useRef<string | null>(null);
+  const driveConnectionQuery = useGetDriveConnection();
+  const connectDriveMutation = useConnectDrive({
+    mutation: {
+      onSuccess: () => {
+        setDriveNotice('');
+        void queryClient.invalidateQueries({ queryKey: getGetDriveConnectionQueryKey() });
+        Alert.alert('Google Drive terhubung', 'Backup akan masuk ke Google Drive akun ini.');
+      },
+      onError: () => {
+        setDriveNotice('Google Drive belum berhasil dihubungkan. Coba lagi dan pilih akun Google yang benar.');
+      },
+    },
+  });
+  const disconnectDriveMutation = useDisconnectDrive({
+    mutation: {
+      onSuccess: () => {
+        setDriveNotice('');
+        void queryClient.invalidateQueries({ queryKey: getGetDriveConnectionQueryKey() });
+        backupMutation.reset();
+        Alert.alert('Google Drive diputuskan', 'Aplikasi tidak lagi menyimpan akses ke Google Drive akun ini.');
+      },
+      onError: () => {
+        setDriveNotice('Google Drive belum berhasil diputuskan. Coba lagi.');
+      },
+    },
+  });
   const backupMutation = useSaveDriveBackup({
     mutation: {
       onSuccess: () => {
         Alert.alert('Backup berhasil', 'Salinan data Kasir Miso sudah tersimpan di Google Drive.');
       },
       onError: () => {
-        Alert.alert('Backup gagal', 'Data belum tersimpan ke Google Drive. Periksa koneksi lalu coba lagi.');
+        Alert.alert('Backup gagal', 'Data belum tersimpan. Pastikan Google Drive akun ini sudah terhubung lalu coba lagi.');
       },
     },
   });
 
+  const handleDriveConnect = async () => {
+    if (connectDriveMutation.isPending) return;
+    if (!googleClientId || !driveRequest) {
+      setDriveNotice('Konfigurasi OAuth Google belum tersedia di aplikasi ini.');
+      return;
+    }
+    setDriveNotice('');
+    await promptDriveAsync();
+  };
+
+  useEffect(() => {
+    if (!driveResponse) return;
+    if (driveResponse.type === 'error') {
+      setDriveNotice('Login Google untuk Drive dibatalkan atau gagal. Coba lagi.');
+      return;
+    }
+    if (driveResponse.type !== 'success') return;
+    const code = driveResponse.params.code;
+    if (!code || !driveRequest?.codeVerifier || handledDriveCode.current === code) return;
+    handledDriveCode.current = code;
+    connectDriveMutation.mutate({
+      data: {
+        code,
+        redirectUri: driveRedirectUri,
+        codeVerifier: driveRequest.codeVerifier,
+      },
+    });
+  }, [connectDriveMutation, driveRedirectUri, driveRequest, driveResponse]);
+
   const handleDriveBackup = () => {
-    if (!warung.hydrated || backupMutation.isPending) return;
+    if (!warung.hydrated || backupMutation.isPending || !driveConnectionQuery.data?.connected) return;
     backupMutation.mutate({
       data: {
         state: {
@@ -186,7 +271,7 @@ export default function SettingsScreen() {
         <Text style={[s.sectionKicker, { color: c.primary }]}>KEAMANAN DATA</Text>
         <Text style={[s.sectionTitle, { color: c.foreground }]}>Backup ke Google Drive</Text>
         <Text style={[s.sectionBody, { color: c.mutedForeground }]}>
-          Simpan salinan data warung sebagai file baru di Google Drive. Setiap backup dibuat terpisah agar riwayat data tetap aman.
+          Hubungkan Google Drive milik akun ini, lalu simpan salinan data warung sebagai file baru. Setiap backup dibuat terpisah agar riwayat data tetap aman.
         </Text>
         <Surface style={s.backupCard}>
           <View style={[s.backupIcon, { backgroundColor: c.secondary }]}>
@@ -194,16 +279,50 @@ export default function SettingsScreen() {
           </View>
           <View style={s.backupCopy}>
             <Text style={[s.settingLabel, { color: c.foreground }]}>
-              {backupMutation.isSuccess ? `Tersimpan: ${backupMutation.data?.name ?? 'backup terbaru'}` : 'Belum ada backup dari perangkat ini'}
+              {driveConnectionQuery.data?.connected
+                ? `Terhubung${driveConnectionQuery.data.email ? `: ${driveConnectionQuery.data.email}` : ''}`
+                : 'Google Drive belum terhubung'}
             </Text>
             <Text style={[s.settingDetail, { color: c.mutedForeground }]}>
-              Koneksi Google Drive dikelola secara aman. Tidak perlu memasukkan client secret atau token ke aplikasi.
+              Token Google disimpan terenkripsi di server dan hanya berlaku untuk akun ini.
             </Text>
           </View>
+          {driveConnectionQuery.data?.connected ? (
+            <Pressable
+              testID="google-drive-disconnect"
+              accessibilityRole="button"
+              accessibilityLabel="Putuskan Google Drive"
+              disabled={disconnectDriveMutation.isPending}
+              onPress={() => disconnectDriveMutation.mutate()}
+              style={({ pressed }) => [s.disconnectButton, { borderColor: c.border, opacity: pressed || disconnectDriveMutation.isPending ? 0.6 : 1 }]}
+            >
+              <Ionicons name="unlink-outline" size={16} color={c.destructive} />
+              <Text style={[s.disconnectButtonText, { color: c.destructive }]}>
+                {disconnectDriveMutation.isPending ? 'Memutuskan...' : 'Putuskan'}
+              </Text>
+            </Pressable>
+          ) : (
+            <PrimaryButton
+              testID="google-drive-connect"
+              icon="link-outline"
+              disabled={!driveRequest || connectDriveMutation.isPending}
+              onPress={() => void handleDriveConnect()}
+            >
+              {connectDriveMutation.isPending ? 'Menghubungkan...' : 'Hubungkan Google Drive'}
+            </PrimaryButton>
+          )}
+          {driveNotice ? (
+            <Text style={[s.driveNotice, { color: c.destructive }]}>{driveNotice}</Text>
+          ) : null}
+          {driveConnectionQuery.data?.connected && backupMutation.isSuccess ? (
+            <Text style={[s.settingDetail, { color: c.mutedForeground }]}>
+              Backup terakhir: {backupMutation.data?.name ?? 'backup terbaru'}
+            </Text>
+          ) : null}
           <PrimaryButton
             testID="google-drive-backup"
             icon="cloud-upload-outline"
-            disabled={!warung.hydrated || backupMutation.isPending}
+            disabled={!warung.hydrated || !driveConnectionQuery.data?.connected || backupMutation.isPending}
             onPress={handleDriveBackup}
           >
             {backupMutation.isPending ? 'Menyimpan...' : 'Backup sekarang'}
@@ -251,6 +370,9 @@ const s = StyleSheet.create({
   backupCard: { gap: 11 },
   backupIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   backupCopy: { gap: 2 },
+  disconnectButton: { minHeight: 42, borderWidth: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  disconnectButtonText: { fontSize: 12, fontWeight: '800' },
+  driveNotice: { fontSize: 11, lineHeight: 16, fontWeight: '700' },
   driveLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
   driveLinkText: { fontSize: 12, fontWeight: '800' },
   savedNotice: { minHeight: 44, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
