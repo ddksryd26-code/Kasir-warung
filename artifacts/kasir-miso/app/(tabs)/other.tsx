@@ -16,6 +16,12 @@ import { persistImageAsset } from '@/utils/persistentImage';
 
 const OFFLINE_BACKUP_KEY = 'warung-offline-backup-v1';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
+type OtherAuthState = {
+  isSignedIn: boolean;
+  isUserLoaded: boolean;
+  user: ReturnType<typeof useUser>['user'];
+  signOut: () => Promise<void>;
+};
 
 const formatBackupTime = (value: string) => {
   if (!value) return 'Belum pernah dibackup';
@@ -63,12 +69,44 @@ function MenuRow({
 }
 
 export default function OtherScreen() {
-  const c = useColors();
-  const router = useRouter();
-  const warung = useWarung();
+  if (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return <AuthenticatedOtherScreen />;
+  }
+
+  return (
+    <OtherContent
+      auth={{
+        isSignedIn: false,
+        isUserLoaded: true,
+        user: null,
+        signOut: async () => undefined,
+      }}
+    />
+  );
+}
+
+function AuthenticatedOtherScreen() {
   const { isSignedIn } = useAuth();
   const { isLoaded: isUserLoaded, user } = useUser();
   const { signOut } = useClerk();
+
+  return (
+    <OtherContent
+      auth={{
+        isSignedIn: Boolean(isSignedIn),
+        isUserLoaded,
+        user,
+        signOut,
+      }}
+    />
+  );
+}
+
+function OtherContent({ auth }: { auth: OtherAuthState }) {
+  const c = useColors();
+  const router = useRouter();
+  const warung = useWarung();
+  const { isSignedIn, isUserLoaded, user, signOut } = auth;
   const offlineBackupKey = user?.id
     ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(user.id)}`
     : `${OFFLINE_BACKUP_KEY}:guest`;

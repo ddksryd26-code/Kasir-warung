@@ -50,20 +50,26 @@ if (Platform.OS !== 'web') {
 }
 
 function RootLayoutNav() {
+  return (
+    <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="business-card" options={{ headerShown: false }} />
+      <Stack.Screen name="business-profile" options={{ headerShown: false }} />
+      <Stack.Screen name="staff" options={{ headerShown: false }} />
+      <Stack.Screen name="reminders" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="stock-edit" options={{ headerShown: false }} />
+      <Stack.Screen name="cash-flow" options={{ headerShown: false }} />
+    </Stack>
+  );
+}
+
+function ClerkAwareRootLayoutNav() {
   const { isSignedIn } = useAuth();
 
   return (
     <>
-      <Stack screenOptions={{ headerBackTitle: 'Back' }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="business-card" options={{ headerShown: false }} />
-        <Stack.Screen name="business-profile" options={{ headerShown: false }} />
-        <Stack.Screen name="staff" options={{ headerShown: false }} />
-        <Stack.Screen name="reminders" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
-        <Stack.Screen name="stock-edit" options={{ headerShown: false }} />
-        <Stack.Screen name="cash-flow" options={{ headerShown: false }} />
-      </Stack>
+      <RootLayoutNav />
       {isSignedIn ? (
         <>
           <SyncConflictPrompt />
@@ -173,18 +179,6 @@ function AuthLoadingScreen() {
   );
 }
 
-function AuthConfigurationScreen() {
-  return (
-    <View style={authGateStyles.container}>
-      <Ionicons name="shield-outline" size={42} color="#D95D39" />
-      <Text style={authGateStyles.title}>Login belum dikonfigurasi</Text>
-      <Text style={authGateStyles.body}>
-        Kasir Miso membutuhkan konfigurasi Clerk sebelum dapat digunakan oleh banyak akun.
-      </Text>
-    </View>
-  );
-}
-
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const pathname = usePathname();
@@ -203,6 +197,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 function AppProviders({ withClerk }: { withClerk: boolean }) {
+  const navigation = withClerk ? <ClerkAwareRootLayoutNav /> : <RootLayoutNav />;
   const app = (
     <ThemeProvider>
       <ErrorBoundary>
@@ -210,7 +205,7 @@ function AppProviders({ withClerk }: { withClerk: boolean }) {
           <NotesProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <KeyboardProvider>
-                <RootLayoutNav />
+                {navigation}
               </KeyboardProvider>
             </GestureHandlerRootView>
           </NotesProvider>
@@ -294,7 +289,7 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 
-  if (!clerkPublishableKey) return <AuthConfigurationScreen />;
+  if (!clerkPublishableKey) return app;
 
   return (
     <ClerkProvider

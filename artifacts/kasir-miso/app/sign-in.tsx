@@ -21,6 +21,14 @@ function useWarmUpBrowser() {
 }
 
 export default function SignInScreen() {
+  if (!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return <SignInUnavailableScreen />;
+  }
+
+  return <ClerkSignInScreen />;
+}
+
+function ClerkSignInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -115,6 +123,35 @@ export default function SignInScreen() {
 
         <Text style={[styles.privacy, { color: colors.mutedForeground }]}>
           Dengan masuk, kamu menyetujui penggunaan akun Google untuk mengamankan akses aplikasi.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function SignInUnavailableScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}>
+      <View style={styles.content}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Kembali"
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.backButton, { backgroundColor: colors.muted, opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Ionicons name="arrow-back" size={20} color={colors.foreground} />
+        </Pressable>
+        <View style={[styles.logo, { backgroundColor: colors.muted }]}>
+          <Ionicons name="shield-outline" size={34} color={colors.mutedForeground} />
+        </View>
+        <Text style={[styles.kicker, { color: colors.primary }]}>AKUN KASIR MISO</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Login belum tersedia</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+          Kasir tetap bisa digunakan tanpa login. Login akan tersedia setelah konfigurasi akun aplikasi diaktifkan.
         </Text>
       </View>
     </View>

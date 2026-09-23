@@ -28,6 +28,10 @@ import { useWarung } from '@/context/WarungContext';
 import { mimeTypeFromUri, persistImageBase64, readImageAsBase64 } from '@/utils/persistentImage';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
+type SettingsAuthState = {
+  isAuthLoaded: boolean;
+  isSignedIn: boolean;
+};
 const DRIVE_IMAGE_REFERENCE_PREFIX = 'drive-image:';
 const PENDING_DRIVE_IMAGE_PREFIX = 'pending-drive-image:';
 
@@ -206,11 +210,24 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
+  if (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return <AuthenticatedSettingsScreen />;
+  }
+
+  return <SettingsContent auth={{ isAuthLoaded: true, isSignedIn: false }} />;
+}
+
+function AuthenticatedSettingsScreen() {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  return <SettingsContent auth={{ isAuthLoaded, isSignedIn: Boolean(isSignedIn) }} />;
+}
+
+function SettingsContent({ auth }: { auth: SettingsAuthState }) {
   const c = useColors();
   const router = useRouter();
   const { mode, themeId, selectTheme, toggleMode } = useTheme();
   const warung = useWarung();
-  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const { isAuthLoaded, isSignedIn } = auth;
   const queryClient = useQueryClient();
   const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ?? '';
   const driveRedirectUri = AuthSession.makeRedirectUri({
