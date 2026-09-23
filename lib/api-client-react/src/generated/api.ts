@@ -22,8 +22,14 @@ import type {
 import type {
   ConnectDriveBody,
   DisconnectDriveResponse,
+  DriveBackupListResponse,
   DriveConnectionResponse,
+  DriveImageResponse,
+  DriveImageUploadBody,
+  DriveImageUploadResponse,
   HealthStatus,
+  RestoreDriveBackupBody,
+  RestoreDriveBackupResponse,
   SaveDriveBackupBody,
   SaveDriveBackupResponse,
   SaveWarungStateBody,
@@ -387,6 +393,336 @@ export const useSaveDriveBackup = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSaveDriveBackupMutationOptions(options));
+    }
+
+export const getUploadDriveImageUrl = () => {
+
+
+
+
+  return `/api/drive/image`
+}
+
+/**
+ * @summary Upload one backup image to Google Drive
+ */
+export const uploadDriveImage = async (driveImageUploadBody: DriveImageUploadBody, options?: Parameters<typeof customFetch>[1]): Promise<DriveImageUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DriveImageUploadResponse>(getUploadDriveImageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(driveImageUploadBody)
+  }
+);}
+
+
+
+
+
+export const getUploadDriveImageMutationKey = () => ['uploadDriveImage'] as const;
+
+export const getUploadDriveImageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDriveImage>>, TError,UploadDriveImageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadDriveImage>>, TError,UploadDriveImageMutationVariables, TContext> => {
+
+const mutationKey = getUploadDriveImageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadDriveImage>>, UploadDriveImageMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadDriveImage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadDriveImageMutationResult = NonNullable<Awaited<ReturnType<typeof uploadDriveImage>>>
+    export type UploadDriveImageMutationBody = BodyType<DriveImageUploadBody>
+    export type UploadDriveImageMutationError = ErrorType<void>
+    export type UploadDriveImageMutationVariables = {data: BodyType<DriveImageUploadBody>}
+
+    /**
+ * @summary Upload one backup image to Google Drive
+ */
+export const useUploadDriveImage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadDriveImage>>, TError,UploadDriveImageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadDriveImage>>,
+        TError,
+        UploadDriveImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUploadDriveImageMutationOptions(options));
+    }
+
+export const getGetDriveImageUrl = (fileId: string,) => {
+
+
+
+
+  return `/api/drive/image/${fileId}`
+}
+
+/**
+ * @summary Download one backup image from Google Drive
+ */
+export const getDriveImage = async (fileId: string, options?: Parameters<typeof customFetch>[1]): Promise<DriveImageResponse> => {
+
+  return customFetch<DriveImageResponse>(getGetDriveImageUrl(fileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDriveImageQueryKey = (fileId: string,) => {
+    return [
+    `/api/drive/image/${fileId}`
+    ] as const;
+    }
+
+
+export const getGetDriveImageQueryOptions = <TData = Awaited<ReturnType<typeof getDriveImage>>, TError = ErrorType<void>>(fileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDriveImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDriveImageQueryKey(fileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDriveImage>>> = ({ signal }) => getDriveImage(fileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: fileId !== null && fileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDriveImage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDriveImageQueryResult = NonNullable<Awaited<ReturnType<typeof getDriveImage>>>
+export type GetDriveImageQueryError = ErrorType<void>
+
+
+/**
+ * @summary Download one backup image from Google Drive
+ */
+
+export function useGetDriveImage<TData = Awaited<ReturnType<typeof getDriveImage>>, TError = ErrorType<void>>(
+ fileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDriveImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDriveImageQueryOptions(fileId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListDriveBackupsUrl = () => {
+
+
+
+
+  return `/api/drive/backups`
+}
+
+/**
+ * @summary List the current user's Kasir Miso Google Drive backups
+ */
+export const listDriveBackups = async ( options?: Parameters<typeof customFetch>[1]): Promise<DriveBackupListResponse> => {
+
+  return customFetch<DriveBackupListResponse>(getListDriveBackupsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDriveBackupsQueryKey = () => {
+    return [
+    `/api/drive/backups`
+    ] as const;
+    }
+
+
+export const getListDriveBackupsQueryOptions = <TData = Awaited<ReturnType<typeof listDriveBackups>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDriveBackups>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDriveBackupsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDriveBackups>>> = ({ signal }) => listDriveBackups({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDriveBackups>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDriveBackupsQueryResult = NonNullable<Awaited<ReturnType<typeof listDriveBackups>>>
+export type ListDriveBackupsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List the current user's Kasir Miso Google Drive backups
+ */
+
+export function useListDriveBackups<TData = Awaited<ReturnType<typeof listDriveBackups>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDriveBackups>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDriveBackupsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreDriveBackupUrl = () => {
+
+
+
+
+  return `/api/drive/restore`
+}
+
+/**
+ * @summary Read a Kasir Miso backup manifest from Google Drive
+ */
+export const restoreDriveBackup = async (restoreDriveBackupBody: RestoreDriveBackupBody, options?: Parameters<typeof customFetch>[1]): Promise<RestoreDriveBackupResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RestoreDriveBackupResponse>(getRestoreDriveBackupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(restoreDriveBackupBody)
+  }
+);}
+
+
+
+
+
+export const getRestoreDriveBackupMutationKey = () => ['restoreDriveBackup'] as const;
+
+export const getRestoreDriveBackupMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreDriveBackup>>, TError,RestoreDriveBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreDriveBackup>>, TError,RestoreDriveBackupMutationVariables, TContext> => {
+
+const mutationKey = getRestoreDriveBackupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreDriveBackup>>, RestoreDriveBackupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  restoreDriveBackup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreDriveBackupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreDriveBackup>>>
+    export type RestoreDriveBackupMutationBody = BodyType<RestoreDriveBackupBody>
+    export type RestoreDriveBackupMutationError = ErrorType<void>
+    export type RestoreDriveBackupMutationVariables = {data: BodyType<RestoreDriveBackupBody>}
+
+    /**
+ * @summary Read a Kasir Miso backup manifest from Google Drive
+ */
+export const useRestoreDriveBackup = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreDriveBackup>>, TError,RestoreDriveBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreDriveBackup>>,
+        TError,
+        RestoreDriveBackupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRestoreDriveBackupMutationOptions(options));
     }
 
 export const getGetDriveConnectionUrl = () => {

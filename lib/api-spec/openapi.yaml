@@ -103,6 +103,104 @@ paths:
           description: Google Drive is not connected for this account
         "502":
           description: Google Drive upload failed
+  /drive/image:
+    post:
+      operationId: uploadDriveImage
+      tags: [drive]
+      summary: Upload one backup image to Google Drive
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriveImageUploadBody"
+      responses:
+        "200":
+          description: The uploaded Google Drive image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveImageUploadResponse"
+        "400":
+          description: Invalid image
+        "401":
+          description: Authentication required
+        "409":
+          description: Google Drive is not connected for this account
+        "502":
+          description: Google Drive upload failed
+  /drive/image/{fileId}:
+    get:
+      operationId: getDriveImage
+      tags: [drive]
+      summary: Download one backup image from Google Drive
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The downloaded Google Drive image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveImageResponse"
+        "401":
+          description: Authentication required
+        "404":
+          description: Image not found
+        "502":
+          description: Google Drive download failed
+  /drive/backups:
+    get:
+      operationId: listDriveBackups
+      tags: [drive]
+      summary: List the current user's Kasir Miso Google Drive backups
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Available Google Drive backups
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveBackupListResponse"
+        "401":
+          description: Authentication required
+  /drive/restore:
+    post:
+      operationId: restoreDriveBackup
+      tags: [drive]
+      summary: Read a Kasir Miso backup manifest from Google Drive
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestoreDriveBackupBody"
+      responses:
+        "200":
+          description: The backup manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestoreDriveBackupResponse"
+        "400":
+          description: Invalid backup file
+        "401":
+          description: Authentication required
+        "404":
+          description: Backup not found
+        "502":
+          description: Google Drive download failed
   /drive/connection:
     get:
       operationId: getDriveConnection
@@ -327,6 +425,105 @@ components:
         createdAt:
           type: string
           format: date-time
+    DriveImageUploadBody:
+      type: object
+      required:
+        - fileName
+        - mimeType
+        - base64
+      properties:
+        fileName:
+          type: string
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        base64:
+          type: string
+          description: Base64-encoded image bytes without a data URI prefix
+    DriveImageResponse:
+      type: object
+      required:
+        - id
+        - mimeType
+        - base64
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mimeType:
+          type: string
+        base64:
+          type: string
+    DriveImageUploadResponse:
+      type: object
+      required:
+        - id
+        - mimeType
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mimeType:
+          type: string
+    DriveBackupSummary:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        webViewLink:
+          type:
+            - string
+            - "null"
+    DriveBackupListResponse:
+      type: object
+      required:
+        - backups
+      properties:
+        backups:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveBackupSummary"
+    RestoreDriveBackupBody:
+      type: object
+      required:
+        - fileId
+      properties:
+        fileId:
+          type: string
+    RestoreDriveBackupResponse:
+      type: object
+      required:
+        - format
+        - version
+        - target
+        - createdAt
+        - data
+      properties:
+        format:
+          type: string
+          enum: [kasir-miso-backup]
+        version:
+          type: integer
+          enum: [1]
+        target:
+          type: string
+          enum: [google-drive]
+        createdAt:
+          type: string
+          format: date-time
+        data:
+          $ref: "#/components/schemas/WarungState"
     DriveConnectionResponse:
       type: object
       required:

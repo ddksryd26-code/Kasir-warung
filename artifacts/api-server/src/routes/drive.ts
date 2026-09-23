@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   ConnectDriveBody,
+  DriveImageUploadBody,
+  RestoreDriveBackupBody,
   DisconnectDriveResponse,
   DriveConnectionResponse,
   SaveDriveBackupBody,
@@ -12,6 +14,7 @@ import {
 import { db, googleDriveConnections } from "@workspace/db";
 
 const DRIVE_FILE_MIME_TYPE = "application/json";
+const DRIVE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const DRIVE_FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
 const BACKUP_FOLDER_NAME = "Kasir Miso Backups";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -170,6 +173,71 @@ async function driveRequest(accessToken: string, path: string, init?: RequestIni
   return response;
 }
 
+async function uploadDriveBytes(
+  accessToken: string,
+  folderId: string,
+  metadata: Record<string, unknown>,
+  mimeType: string,
+  bytes: Buffer,
+) {
+  const sessionResponse = await driveRequest(
+    accessToken,
+    "/upload/drive/v3/files?uploadType=resumable",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json; charset=UTF-8",
+        "x-upload-content-type": mimeType,
+        "x-upload-content-length": String(bytes.byteLength),
+      },
+      body: JSON.stringify({ ...metadata, parents: [folderId] }),
+    },
+  );
+  const uploadUrl = sessionResponse.headers.get("location");
+  if (!uploadUrl) throw new Error("Google Drive did not return a resumable upload URL");
+
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      "content-type": mimeType,
+      "content-length": String(bytes.byteLength),
+    },
+    body: bytes,
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Google Drive image upload failed (${response.status}): ${detail.slice(0, 300)}`);
+  }
+  return await response.json() as {
+    id?: string;
+    name?: string;
+    mimeType?: string;
+  };
+}
+
+async function downloadDriveBytes(accessToken: string, fileId: string) {
+  const metadataResponse = await driveRequest(
+    accessToken,
+    `/drive/v3/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType`,
+  );
+  const metadata = await metadataResponse.json() as {
+    id?: string;
+    name?: string;
+    mimeType?: string;
+  };
+  const response = await driveRequest(
+    accessToken,
+    `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
+  );
+  return {
+    id: metadata.id ?? fileId,
+    name: metadata.name,
+    mimeType: metadata.mimeType ?? "application/octet-stream",
+    base64: Buffer.from(await response.arrayBuffer()).toString("base64"),
+  };
+}
+
 function escapeDriveQueryValue(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
@@ -259,6 +327,42 @@ async function uploadBackup(
     name?: string;
     webViewLink?: string;
     createdTime?: string;
+  };
+}
+
+async function listBackups(accessToken: string, folderId: string) {
+  const query = [
+    `'${escapeDriveQueryValue(folderId)}' in parents`,
+    "name contains 'Kasir Miso - '",
+    `mimeType = '${DRIVE_FILE_MIME_TYPE}'`,
+    "trashed = false",
+  ].join(" and ");
+  const response = await driveRequest(
+    accessToken,
+    `/drive/v3/files?q=${encodeURIComponent(query)}&pageSize=20&orderBy=createdTime%20desc&fields=files(id,name,createdTime,webViewLink)`,
+  );
+  const result = await response.json() as {
+    files?: Array<{ id?: string; name?: string; createdTime?: string; webViewLink?: string }>;
+  };
+  return (result.files ?? []).filter((file) => file.id && file.name && file.createdTime).map((file) => ({
+    id: file.id as string,
+    name: file.name as string,
+    createdAt: file.createdTime as string,
+    webViewLink: file.webViewLink ?? null,
+  }));
+}
+
+async function readBackupManifest(accessToken: string, fileId: string) {
+  const response = await driveRequest(
+    accessToken,
+    `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
+  );
+  return await response.json() as {
+    format?: unknown;
+    version?: unknown;
+    target?: unknown;
+    createdAt?: unknown;
+    data?: unknown;
   };
 }
 
@@ -416,6 +520,170 @@ export function createDriveRouter({
     } catch (error) {
       req.log.error({ err: error }, "Google Drive backup failed");
       res.status(502).json({ error: "Backup ke Google Drive gagal. Coba hubungkan ulang lalu coba lagi." });
+    }
+  });
+
+  router.post("/drive/image", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const parsed = DriveImageUploadBody.safeParse(req.body);
+    if (!parsed.success || !DRIVE_IMAGE_MIME_TYPES.has(parsed.data?.mimeType ?? "")) {
+      res.status(400).json({ error: "Invalid backup image" });
+      return;
+    }
+
+    const [connection] = await database
+      .select()
+      .from(googleDriveConnections)
+      .where(eq(googleDriveConnections.userId, userId))
+      .limit(1);
+    if (!connection) {
+      res.status(409).json({ error: "Google Drive belum terhubung untuk akun ini" });
+      return;
+    }
+
+    try {
+      const bytes = Buffer.from(parsed.data.base64, "base64");
+      if (bytes.byteLength === 0 || bytes.byteLength > 8 * 1024 * 1024) {
+        res.status(400).json({ error: "Ukuran gambar backup harus lebih dari 0 dan maksimal 8 MB." });
+        return;
+      }
+      const accessToken = await getAccessToken(userId, connection, database);
+      const folderId = await findOrCreateBackupFolder(accessToken);
+      const safeFileName = parsed.data.fileName.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 120) || "image";
+      const uploaded = await uploadDriveBytes(
+        accessToken,
+        folderId,
+        {
+          name: `Kasir Miso Image - ${Date.now()} - ${safeFileName}`,
+          mimeType: parsed.data.mimeType,
+        },
+        parsed.data.mimeType,
+        bytes,
+      );
+      if (!uploaded.id) {
+        res.status(502).json({ error: "Google Drive tidak mengembalikan ID gambar." });
+        return;
+      }
+      res.json({
+        id: uploaded.id,
+        name: uploaded.name ?? safeFileName,
+        mimeType: uploaded.mimeType ?? parsed.data.mimeType,
+      });
+    } catch (error) {
+      req.log.error({ err: error }, "Google Drive image upload failed");
+      res.status(502).json({ error: "Gambar backup ke Google Drive gagal. Coba lagi." });
+    }
+  });
+
+  router.get("/drive/image/:fileId", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const [connection] = await database
+      .select()
+      .from(googleDriveConnections)
+      .where(eq(googleDriveConnections.userId, userId))
+      .limit(1);
+    if (!connection) {
+      res.status(409).json({ error: "Google Drive belum terhubung untuk akun ini" });
+      return;
+    }
+
+    try {
+      const accessToken = await getAccessToken(userId, connection, database);
+      const image = await downloadDriveBytes(accessToken, req.params.fileId);
+      if (!DRIVE_IMAGE_MIME_TYPES.has(image.mimeType)) {
+        res.status(404).json({ error: "File backup bukan gambar yang didukung." });
+        return;
+      }
+      res.json(image);
+    } catch (error) {
+      req.log.error({ err: error }, "Google Drive image download failed");
+      res.status(502).json({ error: "Gambar backup dari Google Drive gagal diunduh." });
+    }
+  });
+
+  router.get("/drive/backups", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const [connection] = await database
+      .select()
+      .from(googleDriveConnections)
+      .where(eq(googleDriveConnections.userId, userId))
+      .limit(1);
+    if (!connection) {
+      res.status(409).json({ error: "Google Drive belum terhubung untuk akun ini" });
+      return;
+    }
+
+    try {
+      const accessToken = await getAccessToken(userId, connection, database);
+      const folderId = await findOrCreateBackupFolder(accessToken);
+      res.json({ backups: await listBackups(accessToken, folderId) });
+    } catch (error) {
+      req.log.error({ err: error }, "Google Drive backup listing failed");
+      res.status(502).json({ error: "Daftar backup Google Drive gagal dibaca." });
+    }
+  });
+
+  router.post("/drive/restore", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+    const parsed = RestoreDriveBackupBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Backup Google Drive tidak valid." });
+      return;
+    }
+
+    const [connection] = await database
+      .select()
+      .from(googleDriveConnections)
+      .where(eq(googleDriveConnections.userId, userId))
+      .limit(1);
+    if (!connection) {
+      res.status(409).json({ error: "Google Drive belum terhubung untuk akun ini" });
+      return;
+    }
+
+    try {
+      const accessToken = await getAccessToken(userId, connection, database);
+      const manifest = await readBackupManifest(accessToken, parsed.data.fileId);
+      if (
+        manifest.format !== "kasir-miso-backup"
+        || manifest.version !== 1
+        || manifest.target !== "google-drive"
+        || typeof manifest.createdAt !== "string"
+        || !manifest.data
+        || typeof manifest.data !== "object"
+      ) {
+        res.status(400).json({ error: "Format backup Google Drive tidak dikenali." });
+        return;
+      }
+      res.json({
+        format: "kasir-miso-backup",
+        version: 1,
+        target: "google-drive",
+        createdAt: manifest.createdAt,
+        data: manifest.data,
+      });
+    } catch (error) {
+      req.log.error({ err: error }, "Google Drive manifest restore failed");
+      res.status(502).json({ error: "Backup Google Drive gagal dibaca." });
     }
   });
 

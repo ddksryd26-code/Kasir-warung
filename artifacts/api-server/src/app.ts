@@ -34,7 +34,9 @@ app.use(
 );
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+// Image uploads are sent one at a time as base64. A 5 MB image becomes
+// roughly 6.7 MB in JSON, so leave room for the request envelope.
+app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.CLERK_SECRET_KEY) {
   app.use(

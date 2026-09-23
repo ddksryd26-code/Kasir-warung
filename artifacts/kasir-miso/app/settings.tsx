@@ -5,10 +5,17 @@ import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/expo';
 import {
+  getDriveImage,
   getGetDriveConnectionQueryKey,
+  getListDriveBackupsQueryKey,
+  listDriveBackups,
+  restoreDriveBackup,
+  uploadDriveImage,
   useConnectDrive,
   useDisconnectDrive,
+  useListDriveBackups,
   useGetDriveConnection,
   useSaveDriveBackup,
   type SaveDriveBackupBody,
@@ -18,8 +25,140 @@ import { themeOptions } from '@/constants/colors';
 import { useColors } from '@/hooks/useColors';
 import { useTheme } from '@/context/ThemeContext';
 import { useWarung } from '@/context/WarungContext';
+import { mimeTypeFromUri, persistImageBase64, readImageAsBase64 } from '@/utils/persistentImage';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
+const DRIVE_IMAGE_REFERENCE_PREFIX = 'drive-image:';
+const PENDING_DRIVE_IMAGE_PREFIX = 'pending-drive-image:';
+
+type PendingDriveImage = {
+  placeholder: string;
+  fileName: string;
+  uri: string;
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+};
+
+function parseDriveImageReference(value: unknown) {
+  if (typeof value !== 'string' || !value.startsWith(DRIVE_IMAGE_REFERENCE_PREFIX)) return null;
+  const [, fileId, mimeType] = value.split(':');
+  if (!fileId || !mimeType) return null;
+  return { fileId, mimeType };
+}
+
+async function prepareDriveBackupState(warung: ReturnType<typeof useWarung>) {
+  const pending: PendingDriveImage[] = [];
+  const pendingByUri = new Map<string, PendingDriveImage>();
+  const imagePlaceholder = async (uri: string | undefined, fileName: string) => {
+    if (!uri) return uri;
+    if (parseDriveImageReference(uri)) return uri;
+    const existing = pendingByUri.get(uri);
+    if (existing) return existing.placeholder;
+    const mimeType = uri.startsWith('data:')
+      ? uri.slice(5, uri.indexOf(',')).split(';', 1)[0] || 'image/jpeg'
+      : mimeTypeFromUri(uri);
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
+      throw new Error('Format gambar backup harus JPG, PNG, atau WebP.');
+    }
+    const item: PendingDriveImage = {
+      placeholder: `${PENDING_DRIVE_IMAGE_PREFIX}${pending.length}`,
+      fileName,
+      uri,
+      mimeType: mimeType as PendingDriveImage['mimeType'],
+    };
+    pending.push(item);
+    pendingByUri.set(uri, item);
+    return item.placeholder;
+  };
+
+  const menus = [];
+  for (const [index, item] of warung.menus.entries()) {
+    menus.push({
+      ...item,
+      imageUri: await imagePlaceholder(item.imageUri, `menu-${index}`),
+    });
+  }
+  const consignments = [];
+  for (const [index, item] of warung.consignments.entries()) {
+    consignments.push({
+      ...item,
+      imageUri: await imagePlaceholder(item.imageUri, `titipan-${index}`),
+    });
+  }
+
+  return {
+    state: {
+      menus,
+      activeOrders: warung.activeOrders,
+      kitchenOrders: warung.kitchenOrders,
+      inventory: warung.inventory,
+      stockMovements: warung.stockMovements,
+      consignments,
+      expenses: warung.expenses,
+      sales: warung.sales,
+      auditTrail: warung.auditTrail,
+      cashClosures: warung.cashClosures,
+      savingsRules: warung.savingsRules,
+      savingsEntries: warung.savingsEntries,
+      qrisImageUri: await imagePlaceholder(warung.qrisImageUri, 'qris'),
+    } as unknown as SaveDriveBackupBody['state'],
+    pending,
+  };
+}
+
+function replaceDriveImagePlaceholders(
+  state: SaveDriveBackupBody['state'],
+  replacements: Map<string, string>,
+) {
+  return {
+    ...state,
+    menus: state.menus.map((item) => ({
+      ...item,
+      imageUri: typeof item.imageUri === 'string'
+        ? replacements.get(item.imageUri) ?? item.imageUri
+        : item.imageUri,
+    })),
+    consignments: state.consignments.map((item) => ({
+      ...item,
+      imageUri: typeof item.imageUri === 'string'
+        ? replacements.get(item.imageUri) ?? item.imageUri
+        : item.imageUri,
+    })),
+    qrisImageUri: typeof state.qrisImageUri === 'string'
+      ? replacements.get(state.qrisImageUri) ?? state.qrisImageUri
+      : state.qrisImageUri,
+  };
+}
+
+function collectDriveImageReferences(state: SaveDriveBackupBody['state']) {
+  const references = new Map<string, { fileId: string; mimeType: string }>();
+  const collect = (value: unknown) => {
+    const reference = parseDriveImageReference(value);
+    if (reference) references.set(value as string, reference);
+  };
+  state.menus.forEach((item) => collect(item.imageUri));
+  state.consignments.forEach((item) => collect(item.imageUri));
+  collect(state.qrisImageUri);
+  return references;
+}
+
+async function restoreDriveImages(
+  state: SaveDriveBackupBody['state'],
+  onProgress: (message: string) => void,
+) {
+  const references = collectDriveImageReferences(state);
+  const replacements = new Map<string, string>();
+  let completed = 0;
+  for (const [reference, image] of references) {
+    onProgress(`Mengunduh gambar ${completed + 1} dari ${references.size}...`);
+    const downloaded = await getDriveImage(image.fileId);
+    replacements.set(
+      reference,
+      await persistImageBase64(downloaded.base64, downloaded.mimeType || image.mimeType),
+    );
+    completed += 1;
+  }
+  return replaceDriveImagePlaceholders(state, replacements);
+}
 
 function SettingRow({
   icon,
@@ -71,6 +210,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { mode, themeId, selectTheme, toggleMode } = useTheme();
   const warung = useWarung();
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ?? '';
   const driveRedirectUri = AuthSession.makeRedirectUri({
@@ -89,8 +229,21 @@ export default function SettingsScreen() {
     { scheme: 'com.kasirwarung.app', path: 'drive-callback' },
   );
   const [driveNotice, setDriveNotice] = useState('');
+  const [driveBusy, setDriveBusy] = useState(false);
+  const [driveProgress, setDriveProgress] = useState('');
   const handledDriveCode = useRef<string | null>(null);
-  const driveConnectionQuery = useGetDriveConnection();
+  const driveConnectionQuery = useGetDriveConnection({
+    query: {
+      queryKey: getGetDriveConnectionQueryKey(),
+      enabled: Boolean(isAuthLoaded && isSignedIn),
+    },
+  });
+  const driveBackupsQuery = useListDriveBackups({
+    query: {
+      queryKey: getListDriveBackupsQueryKey(),
+      enabled: Boolean(isAuthLoaded && isSignedIn && driveConnectionQuery.data?.connected),
+    },
+  });
   const connectDriveMutation = useConnectDrive({
     mutation: {
       onSuccess: () => {
@@ -120,6 +273,7 @@ export default function SettingsScreen() {
     mutation: {
       onSuccess: () => {
         Alert.alert('Backup berhasil', 'Salinan data Kasir Miso sudah tersimpan di Google Drive.');
+        void queryClient.invalidateQueries({ queryKey: getListDriveBackupsQueryKey() });
       },
       onError: () => {
         Alert.alert('Backup gagal', 'Data belum tersimpan. Pastikan Google Drive akun ini sudah terhubung lalu coba lagi.');
@@ -156,27 +310,80 @@ export default function SettingsScreen() {
     });
   }, [connectDriveMutation, driveRedirectUri, driveRequest, driveResponse]);
 
-  const handleDriveBackup = () => {
-    if (!warung.hydrated || backupMutation.isPending || !driveConnectionQuery.data?.connected) return;
-    backupMutation.mutate({
-      data: {
-        state: {
-          menus: warung.menus,
-          activeOrders: warung.activeOrders,
-          kitchenOrders: warung.kitchenOrders,
-          inventory: warung.inventory,
-          stockMovements: warung.stockMovements,
-          consignments: warung.consignments,
-          expenses: warung.expenses,
-          sales: warung.sales,
-          auditTrail: warung.auditTrail,
-          cashClosures: warung.cashClosures,
-          savingsRules: warung.savingsRules,
-          savingsEntries: warung.savingsEntries,
-          qrisImageUri: warung.qrisImageUri,
-        } as unknown as SaveDriveBackupBody['state'],
-      },
-    });
+  const handleDriveBackup = async () => {
+    if (!warung.hydrated || driveBusy || backupMutation.isPending || !driveConnectionQuery.data?.connected) return;
+    setDriveBusy(true);
+    setDriveNotice('');
+    try {
+      setDriveProgress('Menyiapkan gambar backup...');
+      const prepared = await prepareDriveBackupState(warung);
+      const replacements = new Map<string, string>();
+      for (const [index, image] of prepared.pending.entries()) {
+        setDriveProgress(`Mengunggah gambar ${index + 1} dari ${prepared.pending.length}...`);
+        const imageData = await readImageAsBase64(image.uri);
+        const uploaded = await uploadDriveImage({
+          fileName: image.fileName,
+          mimeType: imageData.mimeType as PendingDriveImage['mimeType'],
+          base64: imageData.base64,
+        });
+        replacements.set(
+          image.placeholder,
+          `${DRIVE_IMAGE_REFERENCE_PREFIX}${uploaded.id}:${uploaded.mimeType || image.mimeType}`,
+        );
+      }
+      setDriveProgress('Menyimpan manifest backup...');
+      await backupMutation.mutateAsync({
+        data: { state: replaceDriveImagePlaceholders(prepared.state, replacements) },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Backup Google Drive gagal.';
+      setDriveNotice(message);
+      Alert.alert('Backup gagal', 'Gambar atau data belum tersimpan lengkap. Data lokal tetap aman, silakan coba lagi.');
+    } finally {
+      setDriveBusy(false);
+      setDriveProgress('');
+    }
+  };
+
+  const handleDriveRestore = () => {
+    const latestBackup = driveBackupsQuery.data?.backups?.[0];
+    if (!latestBackup || driveBusy) {
+      setDriveNotice('Belum ada backup Google Drive yang tersedia.');
+      return;
+    }
+    Alert.alert(
+      'Pulihkan backup terbaru?',
+      `Data aplikasi akan diganti dengan backup ${latestBackup.name}.`,
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Pulihkan',
+          style: 'destructive',
+          onPress: () => void restoreLatestDriveBackup(latestBackup.id),
+        },
+      ],
+    );
+  };
+
+  const restoreLatestDriveBackup = async (fileId: string) => {
+    if (driveBusy) return;
+    setDriveBusy(true);
+    setDriveNotice('');
+    try {
+      setDriveProgress('Membaca manifest backup...');
+      const manifest = await restoreDriveBackup({ fileId });
+      setDriveProgress('Menyiapkan gambar restore...');
+      const restoredState = await restoreDriveImages(manifest.data, setDriveProgress);
+      await warung.restoreState(restoredState);
+      Alert.alert('Restore berhasil', 'Data dan gambar dari Google Drive sudah dipulihkan ke perangkat ini.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Restore Google Drive gagal.';
+      setDriveNotice(message);
+      Alert.alert('Restore gagal', 'Data lama tetap dipertahankan. Silakan coba lagi dengan koneksi yang stabil.');
+    } finally {
+      setDriveBusy(false);
+      setDriveProgress('');
+    }
   };
 
   return (
@@ -319,13 +526,24 @@ export default function SettingsScreen() {
               Backup terakhir: {backupMutation.data?.name ?? 'backup terbaru'}
             </Text>
           ) : null}
+          {driveProgress ? (
+            <Text style={[s.driveNotice, { color: c.primary }]}>{driveProgress}</Text>
+          ) : null}
           <PrimaryButton
             testID="google-drive-backup"
             icon="cloud-upload-outline"
-            disabled={!warung.hydrated || !driveConnectionQuery.data?.connected || backupMutation.isPending}
-            onPress={handleDriveBackup}
+            disabled={!warung.hydrated || !driveConnectionQuery.data?.connected || driveBusy || backupMutation.isPending}
+            onPress={() => void handleDriveBackup()}
           >
-            {backupMutation.isPending ? 'Menyimpan...' : 'Backup sekarang'}
+            {driveBusy ? 'Memproses...' : 'Backup sekarang'}
+          </PrimaryButton>
+          <PrimaryButton
+            testID="google-drive-restore"
+            icon="cloud-download-outline"
+            disabled={!warung.hydrated || !driveConnectionQuery.data?.connected || driveBusy || !driveBackupsQuery.data?.backups?.length}
+            onPress={handleDriveRestore}
+          >
+            {driveBusy ? 'Memproses...' : 'Restore backup terbaru'}
           </PrimaryButton>
           {backupMutation.data?.webViewLink ? (
             <Pressable

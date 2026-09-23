@@ -95,6 +95,80 @@ export interface SaveDriveBackupResponse {
   createdAt: string;
 }
 
+export type DriveImageUploadBodyMimeType = typeof DriveImageUploadBodyMimeType[keyof typeof DriveImageUploadBodyMimeType];
+
+
+export const DriveImageUploadBodyMimeType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+} as const;
+
+export interface DriveImageUploadBody {
+  fileName: string;
+  mimeType: DriveImageUploadBodyMimeType;
+  /** Base64-encoded image bytes without a data URI prefix */
+  base64: string;
+}
+
+export interface DriveImageResponse {
+  id: string;
+  name?: string;
+  mimeType: string;
+  base64: string;
+}
+
+export interface DriveImageUploadResponse {
+  id: string;
+  name?: string;
+  mimeType: string;
+}
+
+export interface DriveBackupSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  /** @nullable */
+  webViewLink?: string | null;
+}
+
+export interface DriveBackupListResponse {
+  backups: DriveBackupSummary[];
+}
+
+export interface RestoreDriveBackupBody {
+  fileId: string;
+}
+
+export type RestoreDriveBackupResponseFormat = typeof RestoreDriveBackupResponseFormat[keyof typeof RestoreDriveBackupResponseFormat];
+
+
+export const RestoreDriveBackupResponseFormat = {
+  'kasir-miso-backup': 'kasir-miso-backup',
+} as const;
+
+export type RestoreDriveBackupResponseVersion = typeof RestoreDriveBackupResponseVersion[keyof typeof RestoreDriveBackupResponseVersion];
+
+
+export const RestoreDriveBackupResponseVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export type RestoreDriveBackupResponseTarget = typeof RestoreDriveBackupResponseTarget[keyof typeof RestoreDriveBackupResponseTarget];
+
+
+export const RestoreDriveBackupResponseTarget = {
+  'google-drive': 'google-drive',
+} as const;
+
+export interface RestoreDriveBackupResponse {
+  format: RestoreDriveBackupResponseFormat;
+  version: RestoreDriveBackupResponseVersion;
+  target: RestoreDriveBackupResponseTarget;
+  createdAt: string;
+  data: WarungState;
+}
+
 export interface DriveConnectionResponse {
   connected: boolean;
   /** @nullable */

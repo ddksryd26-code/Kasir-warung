@@ -123,6 +123,80 @@ export const SaveDriveBackupResponse = zod.object({
 
 
 /**
+ * @summary Upload one backup image to Google Drive
+ */
+export const UploadDriveImageBody = zod.object({
+  "fileName": zod.string(),
+  "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp']),
+  "base64": zod.string().describe('Base64-encoded image bytes without a data URI prefix')
+})
+
+export const UploadDriveImageResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string().optional(),
+  "mimeType": zod.string()
+})
+
+
+/**
+ * @summary Download one backup image from Google Drive
+ */
+export const GetDriveImageParams = zod.object({
+  "fileId": zod.coerce.string()
+})
+
+export const GetDriveImageResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string().optional(),
+  "mimeType": zod.string(),
+  "base64": zod.string()
+})
+
+
+/**
+ * @summary List the current user's Kasir Miso Google Drive backups
+ */
+export const ListDriveBackupsResponse = zod.object({
+  "backups": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "webViewLink": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Read a Kasir Miso backup manifest from Google Drive
+ */
+export const RestoreDriveBackupBody = zod.object({
+  "fileId": zod.string()
+})
+
+export const RestoreDriveBackupResponse = zod.object({
+  "format": zod.enum(['kasir-miso-backup']),
+  "version": zod.literal(1),
+  "target": zod.enum(['google-drive']),
+  "createdAt": zod.coerce.date(),
+  "data": zod.object({
+  "menus": zod.array(zod.record(zod.string(), zod.unknown())),
+  "activeOrders": zod.array(zod.record(zod.string(), zod.unknown())),
+  "kitchenOrders": zod.array(zod.record(zod.string(), zod.unknown())),
+  "inventory": zod.array(zod.record(zod.string(), zod.unknown())),
+  "stockMovements": zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  "consignments": zod.array(zod.record(zod.string(), zod.unknown())),
+  "expenses": zod.array(zod.record(zod.string(), zod.unknown())),
+  "sales": zod.array(zod.record(zod.string(), zod.unknown())),
+  "auditTrail": zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  "cashClosures": zod.array(zod.record(zod.string(), zod.unknown())),
+  "savingsRules": zod.array(zod.record(zod.string(), zod.unknown())),
+  "savingsEntries": zod.array(zod.record(zod.string(), zod.unknown())),
+  "qrisImageUri": zod.string().nullish()
+})
+})
+
+
+/**
  * @summary Get the current user's Google Drive connection
  */
 export const GetDriveConnectionResponse = zod.object({
