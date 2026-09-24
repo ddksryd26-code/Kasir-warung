@@ -22,9 +22,5 @@
     "**/*.test.tsx",
     "vitest.config.ts"
   ],
-  "references": [
-    {
-      "path": "../../lib/api-client-react"
-    }
-  ]
+  "references": []
 }

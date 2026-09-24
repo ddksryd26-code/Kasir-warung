@@ -236,8 +236,8 @@ importers:
         specifier: ^4.6.6
         version: 4.6.8(@types/react@19.2.18)(expo-auth-session@57.0.12(expo@57.0.24)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(expo-constants@57.0.19)(expo-crypto@57.0.3(expo@57.0.24))(expo-secure-store@57.0.4(expo@57.0.24))(expo-web-browser@57.0.3(expo@57.0.24)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3)))(expo@57.0.24)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)(zod@3.25.76)
       '@workspace/api-client-react':
-        specifier: workspace:*
-        version: link:../../lib/api-client-react
+        specifier: file:./portable-api-client
+        version: file:artifacts/kasir-miso/portable-api-client(react@19.2.3)
       expo-auth-session:
         specifier: ~57.0.12
         version: 57.0.12(expo@57.0.24)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -282,7 +282,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@tanstack/react-query':
-        specifier: 'catalog:'
+        specifier: 5.102.8
         version: 5.102.8(react@19.2.3)
       '@types/react':
         specifier: ~19.2.2
@@ -390,7 +390,7 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(@types/node@25.9.6)(vite@7.3.6(@types/node@25.9.6)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
       zod:
-        specifier: 'catalog:'
+        specifier: 3.25.76
         version: 3.25.76
       zod-validation-error:
         specifier: ^3.4.0
@@ -2947,6 +2947,11 @@ packages:
   '@wallet-standard/wallet@1.1.1':
     resolution: {integrity: sha512-8WiRPaKk/wNNRZhB2eVhpR/JW7/aqTCMoZhgVUCujuzDmxxmGvsosMxdCG4NAdYkoyozAHCX8/xLtlWUn5mNdQ==}
     engines: {node: '>=22'}
+
+  '@workspace/api-client-react@file:artifacts/kasir-miso/portable-api-client':
+    resolution: {directory: artifacts/kasir-miso/portable-api-client, type: directory}
+    peerDependencies:
+      react: '>=18'
 
   '@xmldom/xmldom@0.8.15':
     resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
@@ -9334,6 +9339,11 @@ snapshots:
   '@wallet-standard/wallet@1.1.1':
     dependencies:
       '@wallet-standard/base': 1.1.1
+
+  '@workspace/api-client-react@file:artifacts/kasir-miso/portable-api-client(react@19.2.3)':
+    dependencies:
+      '@tanstack/react-query': 5.102.8(react@19.2.3)
+      react: 19.2.3
 
   '@xmldom/xmldom@0.8.15': {}
 
