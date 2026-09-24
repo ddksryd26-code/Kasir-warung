@@ -8,6 +8,16 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "browser-tabs-lock",
+      "core-js",
+      "esbuild",
+      "msw",
+      "unrs-resolver"
+    ]
+  },
   "private": true,
   "dependencies": {
     "@replit/connectors-sdk": "^0.4.3"
