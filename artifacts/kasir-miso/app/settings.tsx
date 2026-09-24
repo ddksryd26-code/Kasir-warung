@@ -231,7 +231,7 @@ function SettingsContent({ auth }: { auth: SettingsAuthState }) {
   const queryClient = useQueryClient();
   const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ?? '';
   const driveRedirectUri = AuthSession.makeRedirectUri({
-    scheme: 'com.kasirwarung.app',
+    scheme: 'kasir-miso',
     path: 'drive-callback',
   });
   const [driveRequest, driveResponse, promptDriveAsync] = useAuthRequest(
@@ -243,7 +243,7 @@ function SettingsContent({ auth }: { auth: SettingsAuthState }) {
       shouldAutoExchangeCode: false,
       extraParams: { access_type: 'offline', prompt: 'consent' },
     },
-    { scheme: 'com.kasirwarung.app', path: 'drive-callback' },
+    { scheme: 'kasir-miso', path: 'drive-callback' },
   );
   const [driveNotice, setDriveNotice] = useState('');
   const [driveBusy, setDriveBusy] = useState(false);

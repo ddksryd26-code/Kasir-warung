@@ -1,5 +1,6 @@
 - [Artifact import lifecycle](artifact-import.md) — preserve generated artifact metadata when merging uploaded app source.
 - [Clerk auth gate in Expo](clerk-auth-gate.md) — use effect-based redirects from the root layout to avoid blank previews.
+- [Cloud sync schema lifecycle](cloud-sync-schema.md) — cloud sync tables must be applied to development before testing; production schema is applied through Publish.
 - [Expo OAuth callback scheme](expo-oauth-callback.md) — AuthSession redirect scheme must exactly match the Expo app scheme or native OAuth cannot return to the app.
 - [Google Drive backup auth](google-drive-backup.md) — use per-user Google OAuth with encrypted server-side tokens; never collect tokens in the app.
 - [Standalone Expo build dependencies](standalone-expo-build-dependencies.md) — remote Android builders need artifact-local dependencies, not workspace/catalog references.
