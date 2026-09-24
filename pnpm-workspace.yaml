@@ -68,10 +68,10 @@ catalog:
 
 autoInstallPeers: false
 
-ignoredBuiltDependencies:
-  - browser-tabs-lock
-  - core-js
-  - esbuild
+allowBuilds:
+  browser-tabs-lock: true
+  core-js: true
+  esbuild: true
 
 overrides:
   # replit uses linux-x64 only, we can exclude all other platforms
