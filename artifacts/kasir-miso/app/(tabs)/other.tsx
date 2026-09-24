@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import { useAuth, useClerk, useUser } from '@clerk/expo';
 import { PageHeader, Screen, Surface } from '@/components/WarungUI';
+import { GoogleDriveBackupCard } from '@/components/GoogleDriveBackupCard';
 import { useColors } from '@/hooks/useColors';
 import { useWarung } from '@/context/WarungContext';
 import { createOfflineBackup, parseOfflineBackup, type OfflineBackupEnvelope } from '@/utils/backupEnvelope';
@@ -375,6 +376,11 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
       </Surface>
 
       <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Utilitas</Text>
+      <GoogleDriveBackupCard
+        isAuthLoaded={isUserLoaded}
+        isSignedIn={isSignedIn}
+        onRequestSignIn={() => router.push('/sign-in')}
+      />
       <Surface style={s.menuCard}>
         <MenuRow
           icon="qr-code-outline"
