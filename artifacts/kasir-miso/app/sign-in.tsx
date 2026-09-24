@@ -46,7 +46,7 @@ function ClerkSignInScreen() {
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri({
-          scheme: 'com.kasirwarung.app',
+          scheme: 'kasir-miso',
           path: 'sign-in',
         }),
       });
