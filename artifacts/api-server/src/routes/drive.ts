@@ -21,6 +21,7 @@ const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
 const GOOGLE_REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke";
 const DRIVE_API_BASE_URL = "https://www.googleapis.com";
+const NATIVE_DRIVE_REDIRECT_URI = "kasir-miso://drive-callback";
 
 type AuthRequest = Parameters<typeof getAuth>[0];
 type Database = typeof db;
@@ -49,6 +50,13 @@ function requiredGoogleCredential(name: "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_OAUTH
   const value = process.env[name];
   if (!value) throw new Error(`${name} is not configured`);
   return value;
+}
+
+function isAllowedDriveRedirectUri(redirectUri: string) {
+  const configuredRedirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
+  return redirectUri === NATIVE_DRIVE_REDIRECT_URI || (
+    Boolean(configuredRedirectUri) && redirectUri === configuredRedirectUri
+  );
 }
 
 function encryptionKey() {
@@ -406,6 +414,10 @@ export function createDriveRouter({
     const parsed = ConnectDriveBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "Invalid Google OAuth exchange", issues: parsed.error.issues });
+      return;
+    }
+    if (!isAllowedDriveRedirectUri(parsed.data.redirectUri)) {
+      res.status(400).json({ error: "Invalid Google OAuth redirect URI" });
       return;
     }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -39,6 +40,8 @@ type PendingDriveImage = {
   uri: string;
   mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
 };
+
+WebBrowser.maybeCompleteAuthSession();
 
 function parseDriveImageReference(value: unknown) {
   if (typeof value !== 'string' || !value.startsWith(DRIVE_IMAGE_REFERENCE_PREFIX)) return null;
@@ -178,6 +181,7 @@ export function GoogleDriveBackupCard({
   const [driveRequest, driveResponse, promptDriveAsync] = useAuthRequest(
     {
       clientId: googleClientId,
+      redirectUri: driveRedirectUri,
       scopes: ['openid', 'email', 'https://www.googleapis.com/auth/drive.file'],
       responseType: AuthSession.ResponseType.Code,
       selectAccount: true,
@@ -189,8 +193,10 @@ export function GoogleDriveBackupCard({
   const [driveNotice, setDriveNotice] = useState('');
   const [driveBusy, setDriveBusy] = useState(false);
   const [driveProgress, setDriveProgress] = useState('');
+  const [drivePromptPending, setDrivePromptPending] = useState(false);
   const handledDriveCode = useRef<string | null>(null);
   const autoConnectAttempted = useRef(false);
+  const drivePromptInFlight = useRef(false);
   const driveConnectionQuery = useGetDriveConnection({
     query: {
       queryKey: getGetDriveConnectionQueryKey(),
@@ -242,22 +248,34 @@ export function GoogleDriveBackupCard({
   });
 
   const handleDriveConnect = async () => {
-    if (connectDriveMutation.isPending) return;
+    if (connectDriveMutation.isPending || drivePromptInFlight.current) return;
     if (!googleClientId || !driveRequest) {
       setDriveNotice('Konfigurasi OAuth Google belum tersedia di aplikasi ini.');
       return;
     }
     setDriveNotice('');
-    await promptDriveAsync();
+    drivePromptInFlight.current = true;
+    setDrivePromptPending(true);
+    try {
+      const result = await promptDriveAsync();
+      if (result.type === 'cancel' || result.type === 'dismiss' || result.type === 'error') {
+        setDriveNotice('Login Google Drive dibatalkan atau gagal. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
+      }
+    } catch {
+      setDriveNotice('Login Google Drive dibatalkan atau gagal. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
+    } finally {
+      drivePromptInFlight.current = false;
+      setDrivePromptPending(false);
+    }
   };
 
   useEffect(() => {
     if (
       !isAuthLoaded
       || !isSignedIn
-      || !driveConnectionQuery.data
-      || driveConnectionQuery.data.connected
+      || driveConnectionQuery.data?.connected
       || driveConnectionQuery.isPending
+      || !driveConnectionQuery.isFetched
       || autoConnectAttempted.current
       || !googleClientId
       || !driveRequest
@@ -265,26 +283,36 @@ export function GoogleDriveBackupCard({
       return;
     }
     autoConnectAttempted.current = true;
-    void promptDriveAsync();
+    void handleDriveConnect();
   }, [
     driveConnectionQuery.data,
+    driveConnectionQuery.isFetched,
     driveConnectionQuery.isPending,
     driveRequest,
+    handleDriveConnect,
     googleClientId,
     isAuthLoaded,
     isSignedIn,
-    promptDriveAsync,
   ]);
 
   useEffect(() => {
     if (!driveResponse) return;
-    if (driveResponse.type === 'error') {
-      setDriveNotice('Login Google Drive dibatalkan atau gagal. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
+    if (driveResponse.type !== 'success') {
+      if (driveResponse.type !== 'opened' && driveResponse.type !== 'locked') {
+        setDriveNotice('Login Google Drive dibatalkan atau gagal. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
+      }
+      drivePromptInFlight.current = false;
+      setDrivePromptPending(false);
       return;
     }
-    if (driveResponse.type !== 'success') return;
     const code = driveResponse.params.code;
-    if (!code || !driveRequest?.codeVerifier || handledDriveCode.current === code) return;
+    drivePromptInFlight.current = false;
+    setDrivePromptPending(false);
+    if (!code || !driveRequest?.codeVerifier) {
+      setDriveNotice('Sesi Google Drive sudah berakhir. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
+      return;
+    }
+    if (handledDriveCode.current === code) return;
     handledDriveCode.current = code;
     connectDriveMutation.mutate({
       data: {
@@ -422,10 +450,14 @@ export function GoogleDriveBackupCard({
           <PrimaryButton
             testID="google-drive-connect"
             icon="link-outline"
-            disabled={!driveRequest || connectDriveMutation.isPending}
+            disabled={!driveRequest || drivePromptPending || connectDriveMutation.isPending}
             onPress={() => void handleDriveConnect()}
           >
-            {connectDriveMutation.isPending ? 'Menghubungkan...' : 'Hubungkan ulang'}
+            {connectDriveMutation.isPending
+              ? 'Menghubungkan...'
+              : drivePromptPending
+                ? 'Membuka Google...'
+                : 'Hubungkan ulang'}
           </PrimaryButton>
         )}
 
