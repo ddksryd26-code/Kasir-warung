@@ -68,13 +68,10 @@ catalog:
 
 autoInstallPeers: false
 
-onlyBuiltDependencies:
-  - '@swc/core'
+ignoredBuiltDependencies:
   - browser-tabs-lock
   - core-js
   - esbuild
-  - msw
-  - unrs-resolver
 
 overrides:
   # replit uses linux-x64 only, we can exclude all other platforms
