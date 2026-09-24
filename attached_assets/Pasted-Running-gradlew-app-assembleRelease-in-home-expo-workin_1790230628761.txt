@@ -1,0 +1,630 @@
+Running 'gradlew :app:assembleRelease' in /home/expo/workingdir/build/artifacts/kasir-miso/android
+Welcome to Gradle 9.3.1!
+Here are the highlights of this release:
+- Test reporting improvements
+ - Error and warning improvements
+ - Build authoring improvements
+For more details see https://docs.gradle.org/9.3.1/release-notes.html
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors
+SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:pluginDescriptors
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources
+> Task :gradle-plugin:settings-plugin:processResources
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:compileKotlin
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar
+> Task :gradle-plugin:settings-plugin:compileKotlin
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:classes
+> Task :gradle-plugin:settings-plugin:jar
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:pluginDescriptors
+> Task :expo-module-gradle-plugin:processResources
+> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors
+> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:pluginDescriptors
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:processResources
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:compileKotlin
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:classes
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:jar
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:classes
+> Task :expo-gradle-plugin:expo-autolinking-plugin:jar
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors
+> Task :gradle-plugin:react-native-gradle-plugin:processResources
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:classes
+> Task :gradle-plugin:react-native-gradle-plugin:jar
+> Task :expo-module-gradle-plugin:compileKotlin
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_react-native@_bf34fe4a399260349806ed289694d178/node_modules/expo-modules-core/expo-module-gradle-plugin/src/main/kotlin/expo/modules/plugin/android/AndroidLibraryExtension.kt:9:24 'var targetSdk: Int?' is deprecated. Will be removed from library DSL in v9.0. Use testOptions.targetSdk or/and lint.targetSdk instead.
+> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:classes
+> Task :expo-module-gradle-plugin:jar
+> Configure project :
+[32m[ExpoRootProject][0m Using the following versions:
+  - buildTools:  [32m36.0.0[0m
+  - minSdk:      [32m24[0m
+  - compileSdk:  [32m36[0m
+  - targetSdk:   [32m36[0m
+  - ndk:         [32m27.1.12297006[0m
+  - kotlin:      [32m2.1.20[0m
+  - ksp:         [32m2.1.20-2.0.1[0m
+> Configure project :app
+ ℹ️  [33mApplying gradle plugin[0m '[32mexpo-max-sdk-override-plugin[0m'
+  [expo-max-sdk-override-plugin] This plugin will find all permissions declared with `android:maxSdkVersion`. If there exists a declaration with the `android:maxSdkVersion` annotation and another one without, the plugin will remove the annotation from the final merged manifest. In order to see a log with the changes run a clean build of the app.
+> Configure project :expo
+Using expo modules
+  - [32mclerk-expo[0m (1.0.0)
+- [32mexpo-log-box[0m (57.0.4)
+  - [32mexpo-constants[0m (57.0.19)
+> Configure project :expo-modules-core
+Linking react-native-worklets native libs into expo-modules-core build tasks
+task ':react-native-worklets:mergeDebugNativeLibs'
+task ':react-native-worklets:mergeReleaseNativeLibs'
+> Configure project :expo
+  - [32mexpo-modules-core[0m (57.0.18)
+  - [33m[📦][0m [32mexpo-dom-webview[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-ui[0m (57.0.19)
+  - [33m[📦][0m [32mexpo-application[0m (57.0.3)
+  - [33m[📦][0m [32mexpo-asset[0m (57.0.18)
+  - [33m[📦][0m [32mexpo-blur[0m (57.0.3)
+  - [33m[📦][0m [32mexpo-crypto[0m (57.0.3)
+  - [33m[📦][0m [32mexpo-document-picker[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-file-system[0m (57.0.7)
+  - [33m[📦][0m [32mexpo-font[0m (57.0.4)
+  - [33m[📦][0m [32mexpo-haptics[0m (57.0.3)
+  - [33m[📦][0m [32mexpo-image[0m (57.0.5)
+  - [33m[📦][0m [32mexpo-image-loader[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-image-picker[0m (57.0.19)
+  - [33m[📦][0m [32mexpo-keep-awake[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-linear-gradient[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-linking[0m (57.0.10)
+  - [33m[📦][0m [32mexpo-location[0m (57.0.19)
+  - [33m[📦][0m [32mexpo-notifications[0m (57.0.20)
+  - [33m[📦][0m [32mexpo-print[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-router[0m (57.0.22)
+  - [33m[📦][0m [32mexpo-secure-store[0m (57.0.4)
+  - [33m[📦][0m [32mexpo-sharing[0m (57.0.21)
+  - [33m[📦][0m [32mexpo-splash-screen[0m (57.0.9)
+  - [33m[📦][0m [32mexpo-status-bar[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-system-ui[0m (57.0.4)
+  - [33m[📦][0m [32mexpo-web-browser[0m (57.0.3)
+> Task :clerk-expo:preBuild UP-TO-DATE
+> Task :expo-log-box:preBuild UP-TO-DATE
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo:generatePackagesList
+> Task :expo:preBuild
+> Task :app:generateAutolinkingNewArchitectureFiles
+> Task :app:generateAutolinkingPackageList
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint
+> Task :expo-constants:createExpoConfig
+> Task :expo-constants:preBuild
+> Task :react-native-masked-view_masked-view:preBuild UP-TO-DATE
+The NODE_ENV environment variable is required but was not specified. Ensure the project is bundled with Expo CLI or NODE_ENV is set. Using only .env.local and .env
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript
+> Task :react-native-keyboard-controller:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:preBuild
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:preBuild
+> Task :react-native-keyboard-controller:generateCodegenArtifactsFromSchema
+> Task :react-native-keyboard-controller:preBuild
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema
+> Task :react-native-safe-area-context:preBuild
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs
+> Task :react-native-reanimated:preBuild
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-screens:generateCodegenArtifactsFromSchema
+> Task :react-native-screens:preBuild
+> Task :react-native-reanimated:preReleaseBuild
+> Task :clerk-expo:preReleaseBuild UP-TO-DATE
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateCodegenSchemaFromJavaScript
+> Task :react-native-svg:generateCodegenArtifactsFromSchema
+> Task :react-native-svg:preBuild
+> Task :expo:preReleaseBuild
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript
+> Task :clerk-expo:mergeReleaseJniLibFolders
+> Task :clerk-expo:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo:mergeReleaseJniLibFolders
+> Task :expo:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo:copyReleaseJniLibsProjectOnly
+> Task :expo-constants:preReleaseBuild
+> Task :clerk-expo:copyReleaseJniLibsProjectOnly
+> Task :expo-log-box:preReleaseBuild UP-TO-DATE
+> Task :expo-constants:mergeReleaseJniLibFolders
+> Task :expo-log-box:mergeReleaseJniLibFolders
+> Task :expo-log-box:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-constants:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-log-box:copyReleaseJniLibsProjectOnly
+> Task :expo-modules-core:preReleaseBuild UP-TO-DATE
+> Task :expo-constants:copyReleaseJniLibsProjectOnly
+> Task :react-native-async-storage_async-storage:preReleaseBuild
+> Task :expo-modules-core:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:preReleaseBuild
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-keyboard-controller:preReleaseBuild
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-masked-view_masked-view:preReleaseBuild UP-TO-DATE
+> Task :react-native-keyboard-controller:mergeReleaseJniLibFolders
+> Task :react-native-keyboard-controller:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-masked-view_masked-view:mergeReleaseJniLibFolders
+> Task :react-native-keyboard-controller:copyReleaseJniLibsProjectOnly
+> Task :react-native-masked-view_masked-view:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-reanimated:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:preReleaseBuild
+> Task :react-native-masked-view_masked-view:copyReleaseJniLibsProjectOnly
+> Task :react-native-screens:preReleaseBuild
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly
+> Task :react-native-svg:preReleaseBuild
+> Task :react-native-svg:mergeReleaseJniLibFolders
+> Task :react-native-svg:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-svg:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-gesture-handler:generateReleaseBuildConfig
+> Task :react-native-gesture-handler:generateReleaseResValues
+> Task :react-native-gesture-handler:generateReleaseResources
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateCodegenArtifactsFromSchema
+> Task :solana-mobile_mobile-wallet-adapter-protocol:preBuild
+> Task :solana-mobile_mobile-wallet-adapter-protocol:preReleaseBuild
+> Task :solana-mobile_mobile-wallet-adapter-protocol:mergeReleaseJniLibFolders
+> Task :solana-mobile_mobile-wallet-adapter-protocol:mergeReleaseNativeLibs NO-SOURCE
+> Task :solana-mobile_mobile-wallet-adapter-protocol:copyReleaseJniLibsProjectOnly
+> Task :solana-mobile_mobile-wallet-adapter-protocol:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateReleaseBuildConfig
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateReleaseResValues
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateReleaseResources
+> Task :solana-mobile_mobile-wallet-adapter-protocol:packageReleaseResources
+> Task :react-native-gesture-handler:packageReleaseResources
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs
+> Task :react-native-worklets:preBuild
+> Task :app:preBuild
+> Task :app:preReleaseBuild
+> Task :react-native-worklets:preReleaseBuild
+> Task :react-native-gesture-handler:parseReleaseLocalResources
+> Task :solana-mobile_mobile-wallet-adapter-protocol:parseReleaseLocalResources
+> Task :app:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:generateReleaseRFile
+> Task :solana-mobile_mobile-wallet-adapter-protocol:generateReleaseRFile
+> Task :react-native-reanimated:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :solana-mobile_mobile-wallet-adapter-protocol:javaPreCompileRelease
+> Task :react-native-reanimated:generateReleaseBuildConfig
+> Task :react-native-reanimated:generateReleaseResValues
+> Task :react-native-reanimated:generateReleaseResources
+> Task :react-native-reanimated:packageReleaseResources
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+Checking the license for package CMake 3.22.1 in /home/expo/Android/Sdk/licenses
+License for package CMake 3.22.1 accepted.
+Preparing "Install CMake 3.22.1 v.3.22.1".
+"Install CMake 3.22.1 v.3.22.1" ready.
+Installing CMake 3.22.1 in /home/expo/Android/Sdk/cmake/3.22.1
+"Install CMake 3.22.1 v.3.22.1" complete.
+> Task :react-native-reanimated:parseReleaseLocalResources
+> Task :react-native-reanimated:generateReleaseRFile
+> Task :react-native-reanimated:javaPreCompileRelease
+> Task :react-native-svg:generateReleaseBuildConfig
+> Task :react-native-svg:generateReleaseResValues
+> Task :react-native-svg:generateReleaseResources
+> Task :react-native-svg:packageReleaseResources
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+"Install CMake 3.22.1 v.3.22.1" finished.
+> Task :react-native-svg:parseReleaseLocalResources
+> Task :react-native-svg:generateReleaseRFile
+> Task :react-native-svg:javaPreCompileRelease
+> Task :solana-mobile_mobile-wallet-adapter-protocol:compileReleaseKotlin
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/@solana-mobile+mobile-wallet-adapter-protocol@2.3.0_react-native@0.86.3_@babel+core@7.2_8b92cf0080ef26ae9194b7658ebfa269/node_modules/@solana-mobile/mobile-wallet-adapter-protocol/android/src/main/java/com/solanamobile/mobilewalletadapter/reactnative/SolanaMobileWalletAdapterPackage.kt:3:8 'class TurboReactPackage : BaseReactPackage' is deprecated. Use BaseReactPackage instead.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/@solana-mobile+mobile-wallet-adapter-protocol@2.3.0_react-native@0.86.3_@babel+core@7.2_8b92cf0080ef26ae9194b7658ebfa269/node_modules/@solana-mobile/mobile-wallet-adapter-protocol/android/src/main/java/com/solanamobile/mobilewalletadapter/reactnative/SolanaMobileWalletAdapterPackage.kt:10:48 'class TurboReactPackage : BaseReactPackage' is deprecated. Use BaseReactPackage instead.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/@solana-mobile+mobile-wallet-adapter-protocol@2.3.0_react-native@0.86.3_@babel+core@7.2_8b92cf0080ef26ae9194b7658ebfa269/node_modules/@solana-mobile/mobile-wallet-adapter-protocol/android/src/main/java/com/solanamobile/mobilewalletadapter/reactnative/SolanaMobileWalletAdapterPackage.kt:23:21 'constructor(name: String, className: String, canOverrideExistingModule: Boolean, needsEagerInit: Boolean, hasConstants: Boolean, isCxxModule: Boolean, isTurboModule: Boolean): ReactModuleInfo' is deprecated. This constructor is deprecated and will be removed in the future. Use ReactModuleInfo(String, String, boolean, boolean, boolean, boolean)].
+> Task :react-native-svg:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+> Task :solana-mobile_mobile-wallet-adapter-protocol:compileReleaseJavaWithJavac
+> Task :solana-mobile_mobile-wallet-adapter-protocol:bundleLibRuntimeToDirRelease
+> Task :react-native-svg:bundleLibCompileToJarRelease
+> Task :react-native-gesture-handler:javaPreCompileRelease
+> Task :react-native-keyboard-controller:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-keyboard-controller:generateReleaseBuildConfig
+> Task :react-native-keyboard-controller:generateReleaseResValues
+> Task :react-native-keyboard-controller:generateReleaseResources
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-keyboard-controller:packageReleaseResources
+> Task :react-native-keyboard-controller:parseReleaseLocalResources
+> Task :react-native-keyboard-controller:generateReleaseRFile
+> Task :react-native-keyboard-controller:javaPreCompileRelease
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateReleaseBuildConfig
+> Task :react-native-safe-area-context:generateReleaseResValues
+> Task :react-native-safe-area-context:generateReleaseResources
+> Task :react-native-safe-area-context:packageReleaseResources
+> Task :react-native-safe-area-context:parseReleaseLocalResources
+> Task :react-native-safe-area-context:generateReleaseRFile
+> Task :react-native-safe-area-context:compileReleaseKotlin
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaProviderManager.kt:39:19 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:9:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:50:54 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:59:23 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaViewShadowNode.kt:9:32 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaViewShadowNode.kt:110:61 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+> Task :react-native-safe-area-context:javaPreCompileRelease
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease
+> Task :clerk-expo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :clerk-expo:generateReleaseBuildConfig
+> Task :clerk-expo:generateReleaseResValues
+> Task :clerk-expo:generateReleaseResources
+> Task :clerk-expo:packageReleaseResources
+> Task :clerk-expo:parseReleaseLocalResources
+> Task :clerk-expo:generateReleaseRFile
+> Task :expo-modules-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-modules-core:generateReleaseBuildConfig
+> Task :expo-modules-core:generateReleaseResValues
+> Task :expo-modules-core:generateReleaseResources
+> Task :expo-modules-core:packageReleaseResources
+> Task :expo-modules-core:parseReleaseLocalResources
+> Task :expo-modules-core:generateReleaseRFile
+> Task :expo-modules-core:javaPreCompileRelease
+> Task :clerk-expo:javaPreCompileRelease
+> Task :expo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo:generateReleaseBuildConfig
+> Task :expo:generateReleaseResValues
+> Task :expo:generateReleaseResources
+> Task :expo:packageReleaseResources
+> Task :expo:parseReleaseLocalResources
+> Task :expo:generateReleaseRFile
+> Task :expo-constants:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-constants:generateReleaseBuildConfig
+> Task :expo-constants:generateReleaseResValues
+> Task :expo-constants:generateReleaseResources
+> Task :expo-constants:packageReleaseResources
+> Task :expo-constants:parseReleaseLocalResources
+> Task :expo-constants:generateReleaseRFile
+> Task :expo-constants:javaPreCompileRelease
+> Task :expo-log-box:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-log-box:generateReleaseBuildConfig
+> Task :expo-log-box:generateReleaseResValues
+> Task :expo-log-box:generateReleaseResources
+> Task :expo-log-box:packageReleaseResources
+> Task :expo-log-box:parseReleaseLocalResources
+> Task :expo-log-box:generateReleaseRFile
+> Task :expo-log-box:javaPreCompileRelease
+> Task :expo:javaPreCompileRelease
+> Task :react-native-async-storage_async-storage:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:generateReleaseResValues
+> Task :react-native-async-storage_async-storage:generateReleaseResources
+> Task :react-native-async-storage_async-storage:packageReleaseResources
+> Task :react-native-async-storage_async-storage:parseReleaseLocalResources
+> Task :react-native-async-storage_async-storage:generateReleaseRFile
+> Task :react-native-async-storage_async-storage:javaPreCompileRelease
+> Task :react-native-async-storage_async-storage:compileReleaseJavaWithJavac
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirRelease
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/expo/workingdir/build/node_modules/.pnpm/@react-native-async-storage+async-storage@2.2.0_react-native@0.86.3_@babel+core@7.29.7__7ff4b953a524790cf2ccaa3622b1d5ca/node_modules/@react-native-async-storage/async-storage/android/src/javaPackage/java/com/reactnativecommunity/asyncstorage/AsyncStoragePackage.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+> Task :react-native-keyboard-controller:compileReleaseKotlin
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/fabric/java/com/reactnativekeyboardcontroller/OverKeyboardViewManager.kt:3:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/fabric/java/com/reactnativekeyboardcontroller/OverKeyboardViewManager.kt:29:44 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/fabric/java/com/reactnativekeyboardcontroller/OverKeyboardViewManager.kt:31:48 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/extensions/EditText.kt:69:42 Unchecked cast of 'ArrayList<*>' to 'ArrayList<TextWatcher>'.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/extensions/ReactContext.kt:12:109 'val DEFAULT: Int' is deprecated. UIManagerType.DEFAULT will be deleted in the next release of React Native. Use [LEGACY] instead.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/extensions/ReactContext.kt:18:27 'fun getEventDispatcher(context: ReactContext, uiManagerType: Int): EventDispatcher?' is deprecated. UIManagerType is no longer needed.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/extensions/ThemedReactContext.kt:18:21 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/interactive/KeyboardAnimationController.kt:89:16 'static fun getWindowInsetsController(p0: View): WindowInsetsControllerCompat?' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:4:8 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:73:7 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:75:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:77:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:79:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:81:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:83:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:85:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/managers/KeyboardControllerViewManagerImpl.kt:87:9 'object MapBuilder : Any' is deprecated. Use Kotlin's built-in collections extensions.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/modules/statusbar/StatusBarManagerCompatModuleImpl.kt:70:38 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/modules/statusbar/StatusBarManagerCompatModuleImpl.kt:73:20 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/modules/statusbar/StatusBarManagerCompatModuleImpl.kt:78:18 'var statusBarColor: Int' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/EdgeToEdgeReactViewGroup.kt:115:58 'static field SOFT_INPUT_ADJUST_RESIZE: Int' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/EdgeToEdgeReactViewGroup.kt:150:81 'static field FLAG_FULLSCREEN: Int' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardHostShadowNode.kt:3:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardHostShadowNode.kt:4:8 'class ReactShadowNodeImpl : Any, ReactShadowNode<ReactShadowNodeImpl!>' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardHostShadowNode.kt:15:45 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardHostShadowNode.kt:22:12 'class ReactShadowNodeImpl : Any, ReactShadowNode<ReactShadowNodeImpl!>' is deprecated. Deprecated in Java.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:13:8 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:30:44 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:79:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'left'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:80:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'top'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:81:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'right'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:82:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'bottom'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:132:9 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:152:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'w'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:153:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'h'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:154:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'oldw'. This may cause problems when calling this function with named arguments.
+w: file:///home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/java/com/reactnativekeyboardcontroller/views/overlay/OverKeyboardViewGroup.kt:155:5 The corresponding parameter in the supertype 'ReactViewGroup' is named 'oldh'. This may cause problems when calling this function with named arguments.
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-masked-view_masked-view:generateReleaseBuildConfig
+> Task :react-native-masked-view_masked-view:generateReleaseResValues
+> Task :react-native-masked-view_masked-view:generateReleaseResources
+> Task :react-native-masked-view_masked-view:packageReleaseResources
+> Task :react-native-masked-view_masked-view:parseReleaseLocalResources
+> Task :react-native-masked-view_masked-view:generateReleaseRFile
+> Task :react-native-masked-view_masked-view:javaPreCompileRelease
+> Task :react-native-keyboard-controller:compileReleaseJavaWithJavac
+> Task :react-native-keyboard-controller:bundleLibRuntimeToDirRelease
+> Task :react-native-masked-view_masked-view:compileReleaseJavaWithJavac
+Note: /home/expo/workingdir/build/node_modules/.pnpm/@react-native-masked-view+masked-view@0.3.2_react-native@0.86.3_@babel+core@7.29.7_@typ_9b095dafc0b6989c6360d4c07d6d6a2f/node_modules/@react-native-masked-view/masked-view/android/src/main/java/org/reactnative/maskedview/RNCMaskedViewPackage.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+> Task :react-native-masked-view_masked-view:bundleLibRuntimeToDirRelease
+> Task :react-native-svg:bundleLibRuntimeToDirRelease
+> Task :react-native-screens:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :clerk-expo:writeReleaseAarMetadata
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[arm64-v8a][worklets]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86]
+> Task :expo:writeReleaseAarMetadata
+> Task :expo-constants:writeReleaseAarMetadata
+> Task :expo-log-box:writeReleaseAarMetadata
+> Task :expo-modules-core:writeReleaseAarMetadata
+> Task :react-native-async-storage_async-storage:writeReleaseAarMetadata
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig
+> Task :react-native-gesture-handler:writeReleaseAarMetadata
+> Task :react-native-keyboard-controller:writeReleaseAarMetadata
+> Task :react-native-masked-view_masked-view:writeReleaseAarMetadata
+> Task :app:checkReleaseDuplicateClasses
+> Task :react-native-reanimated:writeReleaseAarMetadata
+> Task :react-native-safe-area-context:writeReleaseAarMetadata
+> Task :react-native-svg:writeReleaseAarMetadata
+> Task :solana-mobile_mobile-wallet-adapter-protocol:writeReleaseAarMetadata
+> Task :clerk-expo:extractDeepLinksRelease
+> Task :clerk-expo:processReleaseManifest
+> Task :expo:extractDeepLinksRelease
+> Task :expo:processReleaseManifest
+> Task :expo-constants:extractDeepLinksRelease
+> Task :expo-constants:processReleaseManifest
+> Task :expo-log-box:extractDeepLinksRelease
+> Task :expo-log-box:processReleaseManifest
+> Task :expo-modules-core:extractDeepLinksRelease
+> Task :expo-modules-core:processReleaseManifest
+/home/expo/workingdir/build/node_modules/.pnpm/expo-modules-core@57.0.18_react-native-worklets@0.10.1_@babel+core@7.29.7_react-native@_bf34fe4a399260349806ed289694d178/node_modules/expo-modules-core/android/src/main/AndroidManifest.xml:8:9-11:45 Warning:
+	meta-data#com.facebook.soloader.enabled@android:value was tagged at AndroidManifest.xml:8 to replace other declarations but no other declaration present
+> Task :react-native-async-storage_async-storage:extractDeepLinksRelease
+> Task :react-native-async-storage_async-storage:processReleaseManifest
+package="com.reactnativecommunity.asyncstorage" found in source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/@react-native-async-storage+async-storage@2.2.0_react-native@0.86.3_@babel+core@7.29.7__7ff4b953a524790cf2ccaa3622b1d5ca/node_modules/@react-native-async-storage/async-storage/android/src/main/AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.asyncstorage" from the source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/@react-native-async-storage+async-storage@2.2.0_react-native@0.86.3_@babel+core@7.29.7__7ff4b953a524790cf2ccaa3622b1d5ca/node_modules/@react-native-async-storage/async-storage/android/src/main/AndroidManifest.xml.
+> Task :react-native-gesture-handler:extractDeepLinksRelease
+> Task :react-native-gesture-handler:processReleaseManifest
+> Task :react-native-keyboard-controller:extractDeepLinksRelease
+> Task :react-native-keyboard-controller:processReleaseManifest
+package="com.reactnativekeyboardcontroller" found in source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativekeyboardcontroller" from the source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/react-native-keyboard-controller@1.21.9_react-native-reanimated@4.5.1_react-native-work_aba355de633f20b317c840102ab39276/node_modules/react-native-keyboard-controller/android/src/main/AndroidManifest.xml.
+> Task :react-native-masked-view_masked-view:extractDeepLinksRelease
+> Task :react-native-masked-view_masked-view:processReleaseManifest
+> Task :react-native-reanimated:extractDeepLinksRelease
+> Task :react-native-reanimated:processReleaseManifest
+> Task :react-native-safe-area-context:extractDeepLinksRelease
+> Task :react-native-safe-area-context:processReleaseManifest
+package="com.th3rdwave.safeareacontext" found in source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.th3rdwave.safeareacontext" from the source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/react-native-safe-area-context@5.7.0_react-native@0.86.3_@babel+core@7.29.7_@types+reac_87f635aa53b081f261ffc0cb9c97d91b/node_modules/react-native-safe-area-context/android/src/main/AndroidManifest.xml.
+> Task :react-native-svg:extractDeepLinksRelease
+> Task :react-native-svg:processReleaseManifest
+> Task :solana-mobile_mobile-wallet-adapter-protocol:extractDeepLinksRelease
+> Task :solana-mobile_mobile-wallet-adapter-protocol:processReleaseManifest
+package="com.solanamobile.mobilewalletadapter.reactnative" found in source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/@solana-mobile+mobile-wallet-adapter-protocol@2.3.0_react-native@0.86.3_@babel+core@7.2_8b92cf0080ef26ae9194b7658ebfa269/node_modules/@solana-mobile/mobile-wallet-adapter-protocol/android/src/main/AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.solanamobile.mobilewalletadapter.reactnative" from the source AndroidManifest.xml: /home/expo/workingdir/build/node_modules/.pnpm/@solana-mobile+mobile-wallet-adapter-protocol@2.3.0_react-native@0.86.3_@babel+core@7.2_8b92cf0080ef26ae9194b7658ebfa269/node_modules/@solana-mobile/mobile-wallet-adapter-protocol/android/src/main/AndroidManifest.xml.
+> Task :clerk-expo:compileReleaseLibraryResources
+> Task :expo:compileReleaseLibraryResources
+> Task :expo-constants:compileReleaseLibraryResources
+> Task :expo-log-box:compileReleaseLibraryResources
+> Task :expo-modules-core:compileReleaseLibraryResources
+> Task :react-native-async-storage_async-storage:compileReleaseLibraryResources
+> Task :react-native-gesture-handler:compileReleaseLibraryResources
+> Task :react-native-keyboard-controller:compileReleaseLibraryResources
+> Task :react-native-masked-view_masked-view:compileReleaseLibraryResources
+> Task :react-native-reanimated:compileReleaseLibraryResources
+> Task :react-native-safe-area-context:compileReleaseLibraryResources
+> Task :react-native-svg:compileReleaseLibraryResources
+> Task :solana-mobile_mobile-wallet-adapter-protocol:compileReleaseLibraryResources
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarRelease
+> Task :react-native-keyboard-controller:bundleLibCompileToJarRelease
+> Task :react-native-masked-view_masked-view:bundleLibCompileToJarRelease
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease
+> Task :solana-mobile_mobile-wallet-adapter-protocol:bundleLibCompileToJarRelease
+> Task :clerk-expo:prepareReleaseArtProfile
+> Task :expo:prepareReleaseArtProfile
+> Task :expo-constants:prepareReleaseArtProfile
+> Task :expo-log-box:prepareReleaseArtProfile
+> Task :expo-modules-core:prepareReleaseArtProfile
+> Task :react-native-async-storage_async-storage:prepareReleaseArtProfile
+> Task :react-native-gesture-handler:prepareReleaseArtProfile
+> Task :react-native-keyboard-controller:prepareReleaseArtProfile
+> Task :react-native-masked-view_masked-view:prepareReleaseArtProfile
+> Task :react-native-reanimated:prepareReleaseArtProfile
+> Task :react-native-safe-area-context:prepareReleaseArtProfile
+> Task :react-native-svg:prepareReleaseArtProfile
+> Task :solana-mobile_mobile-wallet-adapter-protocol:prepareReleaseArtProfile
+> Task :solana-mobile_mobile-wallet-adapter-protocol:bundleLibRuntimeToJarRelease
+> Task :app:createBundleReleaseJsAndAssets
+React Compiler enabled
+Expo Autolinking module resolution enabled
+> Task :react-native-keyboard-controller:bundleLibRuntimeToJarRelease
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarRelease
+> Task :react-native-masked-view_masked-view:bundleLibRuntimeToJarRelease
+> Task :react-native-svg:bundleLibRuntimeToJarRelease
+> Task :app:createBundleReleaseJsAndAssets
+Starting Metro Bundler
+Failed to construct transformer:  Error: Cannot find module 'babel-preset-expo'
+Require stack:
+- /home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/index.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/index.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/serializer/treeShakeSerializerPlugin.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/serializer/withExpoSerializers.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/ExpoMetroConfig.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/config/loadUserConfig.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/index.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/index.js
+- /home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/bin/cli
+Make sure that all the Babel plugins and presets you are using
+are defined as dependencies or devDependencies in your package.json
+file. It's possible that the missing plugin is loaded by a preset
+you are using that forgot to add the plugin to its dependencies: you
+can workaround this problem by explicitly adding the missing package
+to your top-level package.json.
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at resolve (node:internal/modules/helpers:157:19)
+    at tryRequireResolve (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js:128:11)
+    at resolveStandardizedNameForRequire (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js:162:19)
+    at resolveStandardizedName (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js:183:12)
+    at loadPreset (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js:68:7)
+    at loadPreset.next (<anonymous>)
+    at createDescriptor (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-descriptors.js:140:16)
+    at createDescriptor.next (<anonymous>)
+    at evaluateSync (/home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:251:28)
+    at /home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:31:34
+    at Array.map (<anonymous>)
+    at Function.sync (/home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:31:22)
+    at Function.all (/home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:210:24)
+    at Generator.next (<anonymous>)
+    at createDescriptors (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-descriptors.js:102:41)
+    at createDescriptors.next (<anonymous>)
+    at createPresetDescriptors (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-descriptors.js:96:17)
+    at createPresetDescriptors.next (<anonymous>)
+    at /home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/gensync-utils/functional.js:22:27
+    at Generator.next (<anonymous>)
+    at mergeChainOpts (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:350:34)
+    at mergeChainOpts.next (<anonymous>)
+    at chainWalker (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:316:14)
+    at chainWalker.next (<anonymous>)
+    at loadFileChain (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:191:24)
+    at loadFileChain.next (<anonymous>)
+    at mergeExtendsChain (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:328:28)
+    at mergeExtendsChain.next (<anonymous>)
+    at chainWalker (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:312:20)
+    at chainWalker.next (<anonymous>)
+    at buildRootChain (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/config-chain.js:56:36)
+    at buildRootChain.next (<anonymous>)
+    at loadPrivatePartialConfig (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/partial.js:72:62)
+    at loadPrivatePartialConfig.next (<anonymous>)
+    at loadPartialConfig (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/partial.js:115:25)
+    at loadPartialConfig.next (<anonymous>)
+    at evaluateSync (/home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:251:28)
+    at sync (/home/expo/workingdir/build/node_modules/.pnpm/gensync@1.0.0-beta.2/node_modules/gensync/index.js:89:14)
+    at stopHiding - secret - don't use this - v1 (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/errors/rewrite-stack-trace.js:47:12)
+    at loadPartialConfigSync (/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/index.js:37:84)
+    at Object.getCacheKey (/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/babel-transformer.js:190:66)
+    at Object.getCacheKey (/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/transform-worker/metro-transform-worker.js:643:28)
+    at getTransformCacheKey (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/getTransformCacheKey.js:17:19)
+    at new Transformer (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/Transformer.js:40:43)
+    at /home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/Bundler.js:25:29 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/plugins.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/config/files/index.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@babel+core@7.29.7/node_modules/@babel/core/lib/index.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/serializer/treeShakeSerializerPlugin.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/serializer/withExpoSerializers.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/ExpoMetroConfig.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/config/loadUserConfig.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/index.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/index.js',
+    '/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/bin/cli'
+  ]
+}
+TypeError: Cannot read properties of undefined (reading 'transformFile')
+TypeError: Cannot read properties of undefined (reading 'transformFile')
+    at Bundler.transformFile (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/Bundler.js:55:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async bundler.transformFile (/home/expo/workingdir/build/node_modules/.pnpm/@expo+metro-config@57.0.12_expo@57.0.24_typescript@6.0.3/node_modules/@expo/metro-config/build/serializer/packedMap.js:172:41)
+    at async Object.transform (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/lib/transformHelpers.js:139:12)
+    at async transform (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/Graph.js:176:26)
+    at async visit (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/buildSubgraph.js:80:29)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/buildSubgraph.js:105:3)
+    at async Graph._buildDelta (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/Graph.js:163:22)
+    at async Graph.initialTraverseDependencies (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/Graph.js:146:19)
+    at async DeltaCalculator._getChangedDependencies (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:164:25)
+    at async DeltaCalculator.getDelta (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:74:16)
+    at async DeltaBundler.buildGraph (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/DeltaBundler.js:42:5)
+    at async IncrementalBundler.buildGraphForEntries (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/IncrementalBundler.js:94:19)
+    at async IncrementalBundler.buildGraph (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/IncrementalBundler.js:178:19)
+    at async /home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/IncrementalBundler.js:216:34
+    at async IncrementalBundler.initializeGraph (/home/expo/workingdir/build/node_modules/.pnpm/metro@0.84.5/node_modules/metro/src/IncrementalBundler.js:233:24)
+    at async MetroBundlerDevServer._bundleDirectAsync (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js:1578:35)
+    at async MetroBundlerDevServer.metroLoadModuleContents (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js:656:25)
+    at async MetroBundlerDevServer.legacySinglePageExportBundleAsync (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js:843:24)
+    at async exportEmbedBundleAndAssetsAsync (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js:302:25)
+    at async exportEmbedInternalAsync (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js:254:39)
+    at async exportEmbedAsync (/home/expo/workingdir/build/node_modules/.pnpm/@expo+cli@57.0.26_@expo+metro-runtime@57.0.16_expo-constants@57.0.19_expo-font@57.0.4_e_ea617582b40d4ab13ccd3f3c12c6c1df/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js:235:5)
+Android Bundling failed 18ms node_modules/.pnpm/expo-router@57.0.22_e92f27aa1e8b7fe86a82d32b249c62ca/node_modules/expo-router/entry.js (1 module)
+> Task :app:createBundleReleaseJsAndAssets FAILED
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[armeabi-v7a][worklets]
+[Incubating] Problems report is available at: file:///home/expo/workingdir/build/artifacts/kasir-miso/android/build/reports/problems/problems-report.html
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:createBundleReleaseJsAndAssets'.
+> Process 'command 'node'' finished with non-zero exit value 1
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+BUILD FAILED in 3m 29s
+277 actionable tasks: 277 executed
+See the profiling report at: file:///home/expo/workingdir/build/artifacts/kasir-miso/android/build/reports/profile/profile-2026-09-24-06-14-16.html
+A fine-grained performance profile is available: use the --scan option.
+Error: Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.
