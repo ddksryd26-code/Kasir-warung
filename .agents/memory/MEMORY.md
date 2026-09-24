@@ -4,4 +4,5 @@
 - [Expo OAuth callback scheme](expo-oauth-callback.md) — AuthSession redirect scheme must exactly match the Expo app scheme or native OAuth cannot return to the app.
 - [Google Drive backup auth](google-drive-backup.md) — use per-user Google OAuth with encrypted server-side tokens; never collect tokens in the app.
 - [Google Drive consent boundary](google-drive-consent.md) — Drive auto-connect starts consent after app login; it cannot silently reuse Clerk Google access.
+- [Android cloud dependency resolution](android-build-dependencies.md) — pin React test tooling exactly when cloud npm resolves peers differently from pnpm.
 - [Standalone Expo build dependencies](standalone-expo-build-dependencies.md) — remote Android builders need artifact-local dependencies, not workspace/catalog references.
