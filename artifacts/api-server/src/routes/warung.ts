@@ -1,16 +1,8 @@
-import { getAuth } from "@clerk/express";
 import { and, eq } from "drizzle-orm";
 import { SaveWarungStateBody, SaveWarungStateResponse } from "@workspace/api-zod";
 import { db, warungStates } from "@workspace/db";
 import { Router, type IRouter } from "express";
-
-function currentUserId(req: Parameters<typeof getAuth>[0]) {
-  try {
-    return getAuth(req).userId;
-  } catch {
-    return null;
-  }
-}
+import { getAppUserId } from "../lib/clerkAuth";
 
 function responseFor(record: typeof warungStates.$inferSelect) {
   return SaveWarungStateResponse.parse({
@@ -22,10 +14,10 @@ function responseFor(record: typeof warungStates.$inferSelect) {
 
 export function createWarungRouter({
   database = db,
-  getUserId = currentUserId,
+  getUserId = getAppUserId,
 }: {
   database?: typeof db;
-  getUserId?: (req: Parameters<typeof getAuth>[0]) => string | null;
+  getUserId?: (req: Parameters<typeof getAppUserId>[0]) => string | null;
 } = {}) {
   const router: IRouter = Router();
 

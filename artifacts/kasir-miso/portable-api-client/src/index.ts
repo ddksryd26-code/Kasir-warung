@@ -14,6 +14,7 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 let baseUrl: string | null = null;
 let authTokenGetter: AuthTokenGetter | null = null;
+const clerkAuthProvider = process.env.EXPO_PUBLIC_CLERK_AUTH_PROVIDER;
 
 export function setBaseUrl(url: string | null): void {
   baseUrl = url ? url.replace(/\/+$/, '') : null;
@@ -42,6 +43,10 @@ async function request<T>(
   const { responseType = 'json', headers: initialHeaders, ...init } = options;
   const url = baseUrl && path.startsWith('/') ? `${baseUrl}${path}` : path;
   const headers = new Headers(initialHeaders);
+
+  if (clerkAuthProvider === 'external' && !headers.has('x-clerk-auth-provider')) {
+    headers.set('x-clerk-auth-provider', 'external');
+  }
 
   if (authTokenGetter && !headers.has('authorization')) {
     const token = await authTokenGetter();

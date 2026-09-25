@@ -10,6 +10,7 @@ import {
   clerkProxyMiddleware,
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
+import { getClerkAuthProvider } from "./lib/clerkAuth";
 
 const app: Express = express();
 
@@ -38,13 +39,39 @@ app.use(cors());
 // roughly 6.7 MB in JSON, so leave room for the request envelope.
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true }));
-if (process.env.CLERK_SECRET_KEY) {
+const externalClerkSecretKey = process.env.EXTERNAL_CLERK_SECRET_KEY;
+const externalClerkPublishableKey = process.env.EXTERNAL_CLERK_PUBLISHABLE_KEY;
+const hasExternalClerkKeys = Boolean(externalClerkSecretKey && externalClerkPublishableKey);
+const hasReplitClerkKeys = Boolean(process.env.CLERK_SECRET_KEY && process.env.CLERK_PUBLISHABLE_KEY);
+
+if (hasExternalClerkKeys || hasReplitClerkKeys) {
+  app.use((req, res, next) => {
+    const provider = getClerkAuthProvider(req);
+    if (provider === "external" && !hasExternalClerkKeys) {
+      res.status(503).json({ error: "External Clerk authentication is not configured" });
+      return;
+    }
+    if (provider === "replit" && !hasReplitClerkKeys) {
+      res.status(503).json({ error: "Replit Clerk authentication is not configured" });
+      return;
+    }
+    next();
+  });
+
   app.use(
     clerkMiddleware((req) => ({
-      publishableKey: publishableKeyFromHost(
-        getClerkProxyHost(req) ?? "",
-        process.env.CLERK_PUBLISHABLE_KEY,
-      ),
+      ...(getClerkAuthProvider(req) === "external"
+        ? {
+            publishableKey: externalClerkPublishableKey,
+            secretKey: externalClerkSecretKey,
+          }
+        : {
+            publishableKey: publishableKeyFromHost(
+              getClerkProxyHost(req) ?? "",
+              process.env.CLERK_PUBLISHABLE_KEY,
+            ),
+            secretKey: process.env.CLERK_SECRET_KEY,
+          }),
     })),
   );
 }

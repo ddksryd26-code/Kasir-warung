@@ -12,6 +12,7 @@ import {
   SaveDriveBackupResponse,
 } from "@workspace/api-zod";
 import { db, googleDriveConnections } from "@workspace/db";
+import { getAppUserId } from "../lib/clerkAuth";
 
 const DRIVE_FILE_MIME_TYPE = "application/json";
 const DRIVE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -37,14 +38,6 @@ type GoogleTokenResponse = {
 type GoogleUserInfo = {
   email?: string;
 };
-
-function currentUserId(req: AuthRequest) {
-  try {
-    return getAuth(req).userId;
-  } catch {
-    return null;
-  }
-}
 
 function requiredGoogleCredential(name: "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_OAUTH_CLIENT_SECRET" | "GOOGLE_TOKEN_ENCRYPTION_KEY") {
   const value = process.env[name];
@@ -384,7 +377,7 @@ function connectionResponse(connection: typeof googleDriveConnections.$inferSele
 
 export function createDriveRouter({
   database = db,
-  getUserId = currentUserId,
+  getUserId = getAppUserId,
 }: {
   database?: Database;
   getUserId?: (req: AuthRequest) => string | null;

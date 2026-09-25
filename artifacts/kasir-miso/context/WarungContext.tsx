@@ -729,7 +729,10 @@ function WarungStateProvider({
 
 function AuthenticatedWarungProvider({ children }: { children: ReactNode }) {
   const { isLoaded: authLoaded, userId } = useAuth();
-  return <WarungStateProvider authLoaded={authLoaded} userId={userId}>{children}</WarungStateProvider>;
+  const scopedUserId = process.env.EXPO_PUBLIC_CLERK_AUTH_PROVIDER === 'external' && userId
+    ? `external:${userId}`
+    : userId;
+  return <WarungStateProvider authLoaded={authLoaded} userId={scopedUserId}>{children}</WarungStateProvider>;
 }
 
 function PreviewWarungProvider({ children }: { children: ReactNode }) {
