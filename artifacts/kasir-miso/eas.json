@@ -15,7 +15,7 @@
       "autoIncrement": true,
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_CLERK_AUTH_PROVIDER": "external",
+        "EXPO_PUBLIC_CLERK_AUTH_PROVIDER": "replit",
         "EXPO_PUBLIC_CLERK_PROXY_URL": ""
       }
     }

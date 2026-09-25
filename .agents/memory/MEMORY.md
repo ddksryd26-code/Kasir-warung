@@ -6,3 +6,4 @@
 - [Google Drive consent boundary](google-drive-consent.md) — Drive auto-connect starts consent after app login; it cannot silently reuse Clerk Google access.
 - [Android cloud dependency resolution](android-build-dependencies.md) — pin React test tooling exactly when cloud npm resolves peers differently from pnpm.
 - [Standalone Expo build dependencies](standalone-expo-build-dependencies.md) — remote Android builders need artifact-local dependencies, not workspace/catalog references.
+- [Clerk native build env](expo-clerk-native-build.md) — native Expo builds need a build hook to bridge Replit Clerk secrets into EXPO_PUBLIC variables.
