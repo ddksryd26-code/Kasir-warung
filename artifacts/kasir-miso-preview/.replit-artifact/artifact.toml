@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/kasir-miso-preview/"
+title = "Kasir Miso"
+description = "Aplikasi kasir mobile untuk warung Indonesia yang mengelola pesanan, menu, stok, pengeluaran, riwayat, dan laporan."
+version = "1.0.0"
+id = "artifacts/kasir-miso-preview"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/kasir-miso-preview/" ]
+localPort = 26132
+
+[services.development]
+run = "pnpm --filter @workspace/kasir-miso-preview run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/kasir-miso-preview", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/kasir-miso-preview", "run", "serve" ]
+
+[services.env]
+PORT = "26132"
+BASE_PATH = "/kasir-miso-preview/"
