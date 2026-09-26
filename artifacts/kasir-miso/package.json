@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "@clerk/expo": "^4.6.6",
+    "@clerk/expo-google-signin": "1.0.4",
     "@workspace/api-client-react": "file:./portable-api-client",
     "expo": "~57.0.24",
     "expo-auth-session": "~57.0.12",
