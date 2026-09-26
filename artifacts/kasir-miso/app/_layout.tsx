@@ -60,6 +60,8 @@ function RootLayoutNav() {
       <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="stock-edit" options={{ headerShown: false }} />
       <Stack.Screen name="cash-flow" options={{ headerShown: false }} />
+      <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="sign-up" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -183,14 +185,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const isSignInRoute = pathname === '/sign-in';
+  const isAuthRoute = pathname === '/sign-in' || pathname === '/sign-up';
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (isSignedIn && isSignInRoute) {
+    if (isSignedIn && isAuthRoute) {
       router.replace('/(tabs)/other');
     }
-  }, [isLoaded, isSignedIn, isSignInRoute, router]);
+  }, [isLoaded, isSignedIn, isAuthRoute, router]);
 
   if (!isLoaded) return <AuthLoadingScreen />;
   return <>{children}</>;
