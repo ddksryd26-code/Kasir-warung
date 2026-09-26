@@ -18,7 +18,8 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "@clerk/expo-google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

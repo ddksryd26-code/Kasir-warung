@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useSSO } from '@clerk/expo';
+import { useSignInWithGoogle } from '@clerk/expo/google';
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,16 +10,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 
 WebBrowser.maybeCompleteAuthSession();
-
-function useWarmUpBrowser() {
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-}
 
 export default function SignInScreen() {
   if (!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -33,16 +24,27 @@ function ClerkSignInScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { startSSOFlow } = useSSO();
+  const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useWarmUpBrowser();
 
   const handleGoogleSignIn = useCallback(async () => {
     setErrorMessage('');
     setIsSigningIn(true);
 
     try {
+      if (Platform.OS !== 'web') {
+        const { createdSessionId, setActive } = await startGoogleAuthenticationFlow();
+
+        if (createdSessionId) {
+          await setActive?.({ session: createdSessionId });
+          router.replace('/other' as Href);
+        } else {
+          setErrorMessage('Login belum selesai. Silakan pilih akun Google dan coba lagi.');
+        }
+        return;
+      }
+
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri({
@@ -65,12 +67,17 @@ function ClerkSignInScreen() {
       } else {
         setErrorMessage('Login belum selesai. Silakan coba lagi.');
       }
-    } catch {
-      setErrorMessage('Login Google dibatalkan atau gagal. Silakan coba lagi.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      setErrorMessage(
+        message.includes('credentials not found')
+          ? 'Konfigurasi Google belum lengkap. Silakan gunakan APK terbaru setelah konfigurasi OAuth selesai.'
+          : 'Login Google dibatalkan atau gagal. Silakan coba lagi.',
+      );
     } finally {
       setIsSigningIn(false);
     }
-  }, [router, startSSOFlow]);
+  }, [router, startGoogleAuthenticationFlow, startSSOFlow]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}>
@@ -110,7 +117,7 @@ function ClerkSignInScreen() {
             <Ionicons name="logo-google" size={20} color={colors.primary} />
           )}
           <Text style={[styles.googleButtonText, { color: colors.foreground }]}>
-            {isSigningIn ? 'Membuka Google...' : 'Lanjutkan dengan Google'}
+            {isSigningIn ? 'Menyiapkan Google...' : 'Lanjutkan dengan Google'}
           </Text>
         </Pressable>
 

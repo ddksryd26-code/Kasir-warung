@@ -7,3 +7,4 @@
 - [Android cloud dependency resolution](android-build-dependencies.md) — pin React test tooling exactly when cloud npm resolves peers differently from pnpm.
 - [Standalone Expo build dependencies](standalone-expo-build-dependencies.md) — remote Android builders need artifact-local dependencies, not workspace/catalog references.
 - [Clerk native build env](expo-clerk-native-build.md) — keep Clerk env forwarding in the artifact build flow; native lifecycle hooks may not receive Replit secrets.
+- [Artifact-scoped Expo dependencies](expo-package-management.md) — pnpm monorepos reject package installs that accidentally target the workspace root.
