@@ -130,6 +130,17 @@ function getExpoPublicReplId() {
   return process.env.REPL_ID || process.env.EXPO_PUBLIC_REPL_ID;
 }
 
+function getFirstEnvValue(...names) {
+  for (const name of names) {
+    const value = process.env[name];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim().replace(/^['"]|['"]$/g, '');
+    }
+  }
+
+  return '';
+}
+
 async function startMetro(expoPublicDomain, expoPublicReplId) {
   const isRunning = await checkMetroHealth();
   if (isRunning) {
@@ -139,24 +150,32 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
 
   console.log('Starting Metro...');
   console.log(`Setting EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`);
+  const googleAndroidClientId = getFirstEnvValue(
+    'EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID',
+    'CLERK_GOOGLE_ANDROID_CLIENT_ID',
+  );
+  const googleIosClientId = getFirstEnvValue(
+    'EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID',
+    'CLERK_GOOGLE_IOS_CLIENT_ID',
+  );
+  const googleWebClientId = getFirstEnvValue(
+    'EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID',
+    'CLERK_GOOGLE_WEB_CLIENT_ID',
+  );
+  const googleIosUrlScheme = getFirstEnvValue(
+    'EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME',
+    'CLERK_GOOGLE_IOS_URL_SCHEME',
+  );
   const env = {
     ...process.env,
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
     EXPO_PUBLIC_REPL_ID: expoPublicReplId,
     EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY || '',
-    EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID:
-      process.env.EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID ||
-      process.env.CLERK_GOOGLE_ANDROID_CLIENT_ID ||
-      '',
-    EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID:
-      process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID ||
-      process.env.CLERK_GOOGLE_IOS_CLIENT_ID ||
-      '',
-    EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID:
-      process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID ||
-      process.env.CLERK_GOOGLE_WEB_CLIENT_ID ||
-      '',
+    EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID: googleAndroidClientId,
+    EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: googleIosClientId,
+    EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: googleWebClientId,
+    EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: googleIosUrlScheme,
     EXPO_PUBLIC_CLERK_AUTH_PROVIDER: process.env.EXPO_PUBLIC_CLERK_AUTH_PROVIDER || 'replit',
     EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
     EXPO_PUBLIC_CLERK_PROXY_URL: process.env.CLERK_PROXY_URL

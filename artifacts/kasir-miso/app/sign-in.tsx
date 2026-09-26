@@ -21,6 +21,26 @@ function getClerkErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function getClerkErrorCode(error: unknown) {
+  if (!error || typeof error !== 'object') return '';
+  const candidate = error as { code?: unknown; errors?: Array<{ code?: unknown }> };
+  if (typeof candidate.code === 'string') return candidate.code;
+  const firstErrorCode = candidate.errors?.find((item) => typeof item?.code === 'string')?.code;
+  return typeof firstErrorCode === 'string' ? firstErrorCode : '';
+}
+
+function isMissingAccountError(error: unknown) {
+  const code = getClerkErrorCode(error);
+  const message = getClerkErrorMessage(error, '').toLowerCase();
+  return (
+    code === 'form_identifier_not_found' ||
+    code === 'identifier_not_found' ||
+    message.includes("couldn't find your account") ||
+    message.includes('could not find your account') ||
+    message.includes('account not found')
+  );
+}
+
 export default function SignInScreen() {
   if (!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return <SignInUnavailableScreen />;
@@ -59,7 +79,11 @@ function ClerkSignInScreen() {
       });
 
       if (result.error) {
-        setErrorMessage(getClerkErrorMessage(result.error, 'Email atau password belum benar.'));
+        setErrorMessage(
+          isMissingAccountError(result.error)
+            ? 'Akun ini belum terdaftar di environment Clerk pada build ini. Pilih “Buat akun” atau gunakan build/environment yang sama dengan saat akun dibuat.'
+            : getClerkErrorMessage(result.error, 'Email atau password belum benar.'),
+        );
         return;
       }
 
@@ -119,11 +143,18 @@ function ClerkSignInScreen() {
       }
     } catch (error) {
       const message = getClerkErrorMessage(error, '');
-      setErrorMessage(
-        message.includes('credentials not found')
-          ? 'Google Sign-In belum dikonfigurasi untuk build ini.'
-          : 'Login Google dibatalkan atau gagal. Silakan coba lagi.',
-      );
+      const normalizedMessage = message.toLowerCase();
+      if (normalizedMessage.includes('credentials not found')) {
+        setErrorMessage(
+          'Google belum ikut terbawa ke build ini. Build ulang setelah EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID tersedia di environment build.',
+        );
+      } else if (normalizedMessage.includes('developer_error') || normalizedMessage.includes('10:')) {
+        setErrorMessage(
+          'Konfigurasi OAuth Google tidak cocok dengan package atau signing certificate build ini. Periksa Android Client ID dan SHA-1 release.',
+        );
+      } else {
+        setErrorMessage(message || 'Login Google dibatalkan atau gagal. Silakan coba lagi.');
+      }
     } finally {
       setIsGoogleSigningIn(false);
     }
