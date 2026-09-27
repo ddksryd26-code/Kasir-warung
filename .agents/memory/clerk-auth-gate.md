@@ -7,4 +7,4 @@ Use an effect-based `router.replace` auth gate in the Expo root layout instead o
 
 **Why:** Directly rendering `Redirect` from this project's root layout produced a blank preview even though the sign-in route itself loaded correctly.
 
-**How to apply:** When changing authentication routing in the Kasir Miso Expo artifact, render a loading state while redirecting, allow `/sign-in`, and only show app overlays after `isSignedIn` is true.
+**How to apply:** When changing authentication routing in the Kasir Miso Expo artifact, render a loading state while redirecting, allow `/sign-in`, and only show app overlays after `isSignedIn` is true. After `finalize` or `setActive`, defer the route change until that state becomes true so the first login is not lost during the session-cache update.
