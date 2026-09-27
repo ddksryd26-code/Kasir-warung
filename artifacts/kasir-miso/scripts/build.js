@@ -177,7 +177,10 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
     EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: googleWebClientId,
     EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: googleIosUrlScheme,
     EXPO_PUBLIC_CLERK_AUTH_PROVIDER: process.env.EXPO_PUBLIC_CLERK_AUTH_PROVIDER || 'replit',
-    EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+    EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID: getFirstEnvValue(
+      'EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID',
+      'GOOGLE_OAUTH_CLIENT_ID',
+    ),
     EXPO_PUBLIC_CLERK_PROXY_URL: process.env.CLERK_PROXY_URL
       ? `https://${expoPublicDomain}${process.env.CLERK_PROXY_URL}`
       : '',

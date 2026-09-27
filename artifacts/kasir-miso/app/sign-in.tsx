@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { useSignIn, useSSO } from '@clerk/expo';
+import { useAuth, useSignIn, useSSO } from '@clerk/expo';
 import { useSignInWithGoogle } from '@clerk/expo/google';
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -53,6 +53,7 @@ function ClerkSignInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { signIn, errors, fetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
   const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
@@ -61,12 +62,29 @@ function ClerkSignInScreen() {
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [isPasswordSigningIn, setIsPasswordSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const pendingRouteRef = useRef(false);
   const isBusy = isGoogleSigningIn || isPasswordSigningIn || fetchStatus === 'fetching';
+
+  const navigateToApp = useCallback(() => {
+    if (!isSignedIn) {
+      pendingRouteRef.current = true;
+      return;
+    }
+
+    pendingRouteRef.current = false;
+    router.replace('/(tabs)/other' as Href);
+  }, [isSignedIn, router]);
+
+  useEffect(() => {
+    if (!isSignedIn || !pendingRouteRef.current) return;
+    pendingRouteRef.current = false;
+    router.replace('/(tabs)/other' as Href);
+  }, [isSignedIn, router]);
 
   const finishSignIn = useCallback(async () => {
     await signIn.finalize();
-    router.replace('/(tabs)/other' as Href);
-  }, [router, signIn]);
+    navigateToApp();
+  }, [navigateToApp, signIn]);
 
   const handlePasswordSignIn = useCallback(async () => {
     setErrorMessage('');
@@ -115,7 +133,7 @@ function ClerkSignInScreen() {
 
         if (createdSessionId && setActive) {
           await setActive({ session: createdSessionId });
-          router.replace('/(tabs)/other' as Href);
+          navigateToApp();
         } else {
           setErrorMessage('Login Google belum selesai. Silakan pilih akun lalu coba lagi.');
         }
@@ -130,12 +148,12 @@ function ClerkSignInScreen() {
       if (createdSessionId && setActive) {
         await setActive({
           session: createdSessionId,
-          navigate: async ({ session, decorateUrl }) => {
+          navigate: async ({ session }) => {
             if (session?.currentTask) {
               setErrorMessage('Akun memerlukan langkah tambahan sebelum bisa digunakan.');
               return;
             }
-            router.replace(decorateUrl('/(tabs)/other') as Href);
+            navigateToApp();
           },
         });
       } else {
@@ -158,7 +176,7 @@ function ClerkSignInScreen() {
     } finally {
       setIsGoogleSigningIn(false);
     }
-  }, [router, startGoogleAuthenticationFlow, startSSOFlow]);
+  }, [navigateToApp, startGoogleAuthenticationFlow, startSSOFlow]);
 
   return (
     <KeyboardAwareScrollViewCompat

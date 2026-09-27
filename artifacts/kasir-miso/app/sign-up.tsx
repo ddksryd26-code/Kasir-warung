@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth, useSignUp } from '@clerk/expo';
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -35,12 +35,29 @@ function ClerkSignUpScreen() {
   const [code, setCode] = useState('');
   const [isVerificationStep, setIsVerificationStep] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const pendingRouteRef = useRef(false);
   const isBusy = fetchStatus === 'fetching';
+
+  const navigateToApp = useCallback(() => {
+    if (!isSignedIn) {
+      pendingRouteRef.current = true;
+      return;
+    }
+
+    pendingRouteRef.current = false;
+    router.replace('/(tabs)/other' as Href);
+  }, [isSignedIn, router]);
+
+  useEffect(() => {
+    if (!isSignedIn || !pendingRouteRef.current) return;
+    pendingRouteRef.current = false;
+    router.replace('/(tabs)/other' as Href);
+  }, [isSignedIn, router]);
 
   const finishSignUp = useCallback(async () => {
     await signUp.finalize();
-    router.replace('/(tabs)/other' as Href);
-  }, [router, signUp]);
+    navigateToApp();
+  }, [navigateToApp, signUp]);
 
   const handleCreateAccount = useCallback(async () => {
     setErrorMessage('');

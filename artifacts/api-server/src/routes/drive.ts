@@ -40,7 +40,9 @@ type GoogleUserInfo = {
 };
 
 function requiredGoogleCredential(name: "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_OAUTH_CLIENT_SECRET" | "GOOGLE_TOKEN_ENCRYPTION_KEY") {
-  const value = process.env[name];
+  const value = name === "GOOGLE_OAUTH_CLIENT_ID"
+    ? process.env.GOOGLE_OAUTH_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID
+    : process.env[name];
   if (!value) throw new Error(`${name} is not configured`);
   return value;
 }
