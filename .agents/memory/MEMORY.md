@@ -8,3 +8,4 @@
 - [Standalone Expo build dependencies](standalone-expo-build-dependencies.md) — remote Android builders need artifact-local dependencies, not workspace/catalog references.
 - [Clerk native build env](expo-clerk-native-build.md) — keep Clerk env forwarding in the artifact build flow; native lifecycle hooks may not receive Replit secrets.
 - [Artifact-scoped Expo dependencies](expo-package-management.md) — pnpm monorepos reject package installs that accidentally target the workspace root.
+- [Expo DevTools on Nix](expo-devtools-nix.md) — Metro can run while the desktop DevTools helper lacks system libraries; treat that warning separately from app startup.
