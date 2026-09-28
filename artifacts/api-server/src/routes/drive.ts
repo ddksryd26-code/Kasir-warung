@@ -39,7 +39,7 @@ type GoogleUserInfo = {
   email?: string;
 };
 
-function requiredGoogleCredential(name: "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_OAUTH_CLIENT_SECRET" | "GOOGLE_TOKEN_ENCRYPTION_KEY") {
+function requiredGoogleCredential(name: "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_TOKEN_ENCRYPTION_KEY") {
   const value = name === "GOOGLE_OAUTH_CLIENT_ID"
     ? process.env.GOOGLE_OAUTH_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID
     : process.env[name];
@@ -93,31 +93,37 @@ async function readGoogleJson<T>(response: Response) {
 }
 
 async function exchangeAuthorizationCode(code: string, redirectUri: string, codeVerifier: string) {
+  const body = new URLSearchParams({
+    code,
+    client_id: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_ID"),
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+    code_verifier: codeVerifier,
+  });
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim();
+  if (clientSecret) body.set("client_secret", clientSecret);
+
   const response = await fetch(GOOGLE_TOKEN_ENDPOINT, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_ID"),
-      client_secret: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_SECRET"),
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-      code_verifier: codeVerifier,
-    }),
+    body,
   });
   return readGoogleJson<GoogleTokenResponse>(response);
 }
 
 async function refreshAccessToken(refreshToken: string) {
+  const body = new URLSearchParams({
+    refresh_token: refreshToken,
+    client_id: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_ID"),
+    grant_type: "refresh_token",
+  });
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim();
+  if (clientSecret) body.set("client_secret", clientSecret);
+
   const response = await fetch(GOOGLE_TOKEN_ENDPOINT, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_ID"),
-      client_secret: requiredGoogleCredential("GOOGLE_OAUTH_CLIENT_SECRET"),
-      grant_type: "refresh_token",
-    }),
+    body,
   });
   return readGoogleJson<GoogleTokenResponse>(response);
 }
