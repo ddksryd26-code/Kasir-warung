@@ -7,7 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
-import { useAuth, useClerk, useUser } from '@clerk/expo';
+import { useAuth } from '@clerk/expo';
 import { PageHeader, Screen, Surface } from '@/components/WarungUI';
 import { GoogleDriveBackupCard } from '@/components/GoogleDriveBackupCard';
 import { useColors } from '@/hooks/useColors';
@@ -18,10 +18,9 @@ import { persistImageAsset } from '@/utils/persistentImage';
 const OFFLINE_BACKUP_KEY = 'warung-offline-backup-v1';
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type OtherAuthState = {
+  isAuthLoaded: boolean;
   isSignedIn: boolean;
-  isUserLoaded: boolean;
-  user: ReturnType<typeof useUser>['user'];
-  signOut: () => Promise<void>;
+  userId: string | null;
 };
 
 const formatBackupTime = (value: string) => {
@@ -77,27 +76,23 @@ export default function OtherScreen() {
   return (
     <OtherContent
       auth={{
+        isAuthLoaded: true,
         isSignedIn: false,
-        isUserLoaded: true,
-        user: null,
-        signOut: async () => undefined,
+        userId: null,
       }}
     />
   );
 }
 
 function AuthenticatedOtherScreen() {
-  const { isSignedIn } = useAuth();
-  const { isLoaded: isUserLoaded, user } = useUser();
-  const { signOut } = useClerk();
+  const { isLoaded: isAuthLoaded, isSignedIn, userId } = useAuth();
 
   return (
     <OtherContent
       auth={{
+        isAuthLoaded,
         isSignedIn: Boolean(isSignedIn),
-        isUserLoaded,
-        user,
-        signOut,
+        userId: userId ?? null,
       }}
     />
   );
@@ -107,24 +102,15 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
   const c = useColors();
   const router = useRouter();
   const warung = useWarung();
-  const { isSignedIn, isUserLoaded, user, signOut } = auth;
-  const offlineBackupKey = user?.id
-    ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(user.id)}`
+  const { isAuthLoaded, isSignedIn, userId } = auth;
+  const offlineBackupKey = userId
+    ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(userId)}`
     : `${OFFLINE_BACKUP_KEY}:guest`;
   const [notice, setNotice] = useState('');
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoringOffline, setIsRestoringOffline] = useState(false);
   const [isQrisUploading, setIsQrisUploading] = useState(false);
   const [qrisSheetVisible, setQrisSheetVisible] = useState(false);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      setNotice('Kamu sudah keluar dari akun Google.');
-    } catch {
-      setNotice('Akun belum berhasil dikeluarkan. Silakan coba lagi.');
-    }
-  };
 
   const createBackup = () => ({
     ...createOfflineBackup({
@@ -316,37 +302,6 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
         ))}
       </View>
 
-      <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Akun</Text>
-      <Surface style={s.menuCard}>
-        {isUserLoaded && isSignedIn ? (
-          <>
-            <MenuRow
-              icon="person-circle-outline"
-              label={user?.fullName || 'Akun Google'}
-              detail={user?.primaryEmailAddress?.emailAddress || 'Akun tersambung'}
-              testID="signed-in-account-row"
-              onPress={() => setNotice('Akun Google sedang aktif di perangkat ini.')}
-            />
-            <View style={[s.rowDivider, { backgroundColor: c.border }]} />
-            <MenuRow
-              icon="log-out-outline"
-              label="Keluar dari akun"
-              detail="Putuskan akses akun Google di aplikasi ini"
-              testID="google-sign-out-button"
-              onPress={() => void handleSignOut()}
-            />
-          </>
-        ) : (
-          <MenuRow
-            icon="logo-google"
-            label="Masuk dengan Google"
-            detail="Simpan akses akun warung dengan aman"
-            testID="google-sign-in-menu-row"
-            onPress={() => router.push('/sign-in')}
-          />
-        )}
-      </Surface>
-
       <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Manajemen</Text>
       <Surface style={s.menuCard}>
         <MenuRow icon="business-outline" label="Profil Usaha" onPress={() => router.push('/business-profile')} />
@@ -369,7 +324,8 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
         <View style={[s.rowDivider, { backgroundColor: c.border }]} />
         <MenuRow
           icon="settings-outline"
-          label="Pengaturan"
+          label="Akun & Pengaturan"
+          detail="Kelola login, logout, dan tampilan aplikasi"
           testID="settings-button"
           onPress={() => router.push('/settings')}
         />
@@ -377,9 +333,8 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
 
       <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Utilitas</Text>
       <GoogleDriveBackupCard
-        isAuthLoaded={isUserLoaded}
+        isAuthLoaded={isAuthLoaded}
         isSignedIn={isSignedIn}
-        onRequestSignIn={() => router.push('/sign-in')}
       />
       <Surface style={s.menuCard}>
         <MenuRow

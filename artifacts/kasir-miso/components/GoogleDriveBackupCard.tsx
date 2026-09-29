@@ -28,7 +28,6 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type GoogleDriveBackupCardProps = {
   isAuthLoaded: boolean;
   isSignedIn: boolean;
-  onRequestSignIn: () => void;
 };
 
 const DRIVE_IMAGE_REFERENCE_PREFIX = 'drive-image:';
@@ -168,7 +167,6 @@ async function restoreDriveImages(
 export function GoogleDriveBackupCard({
   isAuthLoaded,
   isSignedIn,
-  onRequestSignIn,
 }: GoogleDriveBackupCardProps) {
   const c = useColors();
   const warung = useWarung();
@@ -441,9 +439,9 @@ export function GoogleDriveBackupCard({
         </Text>
 
         {!isSignedIn ? (
-          <PrimaryButton testID="online-backup-sign-in" icon="logo-google" onPress={onRequestSignIn}>
-            Masuk dengan Google
-          </PrimaryButton>
+          <Text style={[styles.notice, { color: c.mutedForeground }]}>
+            Buka halaman Akun & Pengaturan untuk masuk sebelum menggunakan backup online.
+          </Text>
         ) : isConnected ? (
           <Pressable
             testID="google-drive-disconnect"

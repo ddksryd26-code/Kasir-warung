@@ -139,7 +139,6 @@ function cardElement() {
     <GoogleDriveBackupCard
       isAuthLoaded
       isSignedIn={mocks.signedIn}
-      onRequestSignIn={vi.fn()}
     />
   );
 }
