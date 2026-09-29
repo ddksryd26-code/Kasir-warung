@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
@@ -201,6 +201,7 @@ export function GoogleDriveBackupCard({
     query: {
       queryKey: getGetDriveConnectionQueryKey(),
       enabled: Boolean(isAuthLoaded && isSignedIn),
+      refetchOnMount: 'always',
     },
   });
   const driveBackupsQuery = useListDriveBackups({
@@ -247,7 +248,7 @@ export function GoogleDriveBackupCard({
     },
   });
 
-  const handleDriveConnect = async () => {
+  const handleDriveConnect = useCallback(async () => {
     if (connectDriveMutation.isPending || drivePromptInFlight.current) return;
     if (!googleClientId || !driveRequest) {
       setDriveNotice('Konfigurasi OAuth Google belum tersedia di aplikasi ini.');
@@ -267,7 +268,16 @@ export function GoogleDriveBackupCard({
       drivePromptInFlight.current = false;
       setDrivePromptPending(false);
     }
-  };
+  }, [connectDriveMutation.isPending, driveRequest, googleClientId, promptDriveAsync]);
+
+  useEffect(() => {
+    if (isSignedIn) return;
+    autoConnectAttempted.current = false;
+    drivePromptInFlight.current = false;
+    setDrivePromptPending(false);
+    queryClient.removeQueries({ queryKey: getGetDriveConnectionQueryKey() });
+    queryClient.removeQueries({ queryKey: getListDriveBackupsQueryKey() });
+  }, [isSignedIn, queryClient]);
 
   useEffect(() => {
     if (
@@ -275,6 +285,7 @@ export function GoogleDriveBackupCard({
       || !isSignedIn
       || driveConnectionQuery.data?.connected
       || driveConnectionQuery.isPending
+      || driveConnectionQuery.isFetching
       || !driveConnectionQuery.isFetched
       || autoConnectAttempted.current
       || !googleClientId
@@ -286,6 +297,7 @@ export function GoogleDriveBackupCard({
     void handleDriveConnect();
   }, [
     driveConnectionQuery.data,
+    driveConnectionQuery.isFetching,
     driveConnectionQuery.isFetched,
     driveConnectionQuery.isPending,
     driveRequest,
@@ -296,7 +308,7 @@ export function GoogleDriveBackupCard({
   ]);
 
   useEffect(() => {
-    if (!driveResponse) return;
+    if (!isSignedIn || !driveResponse) return;
     if (driveResponse.type !== 'success') {
       if (driveResponse.type !== 'opened' && driveResponse.type !== 'locked') {
         setDriveNotice('Login Google Drive dibatalkan atau gagal. Gunakan tombol Hubungkan ulang untuk mencoba lagi.');
@@ -321,7 +333,7 @@ export function GoogleDriveBackupCard({
         codeVerifier: driveRequest.codeVerifier,
       },
     });
-  }, [connectDriveMutation, driveRedirectUri, driveRequest, driveResponse]);
+  }, [connectDriveMutation, driveRedirectUri, driveRequest, driveResponse, isSignedIn]);
 
   const handleDriveBackup = async () => {
     if (!warung.hydrated || driveBusy || backupMutation.isPending || !driveConnectionQuery.data?.connected) return;
