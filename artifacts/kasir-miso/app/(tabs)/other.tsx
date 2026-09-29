@@ -7,8 +7,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/expo';
-import { PageHeader, Screen, Surface } from '@/components/WarungUI';
+import { useAuth, useClerk, useUser } from '@clerk/expo';
+import { PageHeader, PrimaryButton, Screen, Surface } from '@/components/WarungUI';
 import { GoogleDriveBackupCard } from '@/components/GoogleDriveBackupCard';
 import { useColors } from '@/hooks/useColors';
 import { useWarung } from '@/context/WarungContext';
@@ -20,7 +20,9 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type OtherAuthState = {
   isAuthLoaded: boolean;
   isSignedIn: boolean;
+  user: ReturnType<typeof useUser>['user'];
   userId: string | null;
+  signOut: () => Promise<void>;
 };
 
 const formatBackupTime = (value: string) => {
@@ -78,7 +80,9 @@ export default function OtherScreen() {
       auth={{
         isAuthLoaded: true,
         isSignedIn: false,
+        user: null,
         userId: null,
+        signOut: async () => undefined,
       }}
     />
   );
@@ -86,13 +90,17 @@ export default function OtherScreen() {
 
 function AuthenticatedOtherScreen() {
   const { isLoaded: isAuthLoaded, isSignedIn, userId } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <OtherContent
       auth={{
         isAuthLoaded,
         isSignedIn: Boolean(isSignedIn),
+        user,
         userId: userId ?? null,
+        signOut,
       }}
     />
   );
@@ -102,7 +110,7 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
   const c = useColors();
   const router = useRouter();
   const warung = useWarung();
-  const { isAuthLoaded, isSignedIn, userId } = auth;
+  const { isAuthLoaded, isSignedIn, user, userId, signOut } = auth;
   const offlineBackupKey = userId
     ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(userId)}`
     : `${OFFLINE_BACKUP_KEY}:guest`;
@@ -111,6 +119,16 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
   const [isRestoringOffline, setIsRestoringOffline] = useState(false);
   const [isQrisUploading, setIsQrisUploading] = useState(false);
   const [qrisSheetVisible, setQrisSheetVisible] = useState(false);
+  const [accountNotice, setAccountNotice] = useState('');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setAccountNotice('Kamu sudah keluar dari akun Kasir Miso.');
+    } catch {
+      setAccountNotice('Akun belum berhasil dikeluarkan. Silakan coba lagi.');
+    }
+  };
 
   const createBackup = () => ({
     ...createOfflineBackup({
@@ -302,6 +320,53 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
         ))}
       </View>
 
+      <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Akun</Text>
+      <Surface style={s.accountCard}>
+        {!isAuthLoaded ? (
+          <Text style={[s.accountStatus, { color: c.mutedForeground }]}>Memeriksa status akun...</Text>
+        ) : isSignedIn ? (
+          <>
+            <View style={s.accountIdentity}>
+              <View style={[s.accountIcon, { backgroundColor: c.secondary }]}>
+                <Ionicons name="person-circle-outline" size={25} color={c.primary} />
+              </View>
+              <View style={s.accountCopy}>
+                <Text style={[s.accountLabel, { color: c.foreground }]}>
+                  {user?.fullName || 'Akun aktif'}
+                </Text>
+                <Text style={[s.accountDetail, { color: c.mutedForeground }]}>
+                  {user?.primaryEmailAddress?.emailAddress || 'Sesi Kasir Miso aktif'}
+                </Text>
+              </View>
+            </View>
+            <Pressable
+              testID="other-sign-out-button"
+              accessibilityRole="button"
+              accessibilityLabel="Keluar dari akun Kasir Miso"
+              onPress={() => void handleSignOut()}
+              style={({ pressed }) => [
+                s.signOutButton,
+                { borderColor: c.border, opacity: pressed ? 0.68 : 1 },
+              ]}
+            >
+              <Ionicons name="log-out-outline" size={18} color={c.destructive} />
+              <Text style={[s.signOutText, { color: c.destructive }]}>Keluar dari akun</Text>
+            </Pressable>
+          </>
+        ) : (
+          <PrimaryButton
+            testID="other-sign-in-button"
+            icon="log-in-outline"
+            onPress={() => router.push('/sign-in')}
+          >
+            Masuk ke akun
+          </PrimaryButton>
+        )}
+      </Surface>
+      {accountNotice ? (
+        <Text style={[s.accountNotice, { color: c.mutedForeground }]}>{accountNotice}</Text>
+      ) : null}
+
       <Text style={[s.groupTitle, { color: c.mutedForeground }]}>Manajemen</Text>
       <Surface style={s.menuCard}>
         <MenuRow icon="business-outline" label="Profil Usaha" onPress={() => router.push('/business-profile')} />
@@ -324,8 +389,8 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
         <View style={[s.rowDivider, { backgroundColor: c.border }]} />
         <MenuRow
           icon="settings-outline"
-          label="Akun & Pengaturan"
-          detail="Kelola login, logout, dan tampilan aplikasi"
+          label="Pengaturan"
+          detail="Atur tampilan aplikasi"
           testID="settings-button"
           onPress={() => router.push('/settings')}
         />
@@ -487,6 +552,16 @@ const s = StyleSheet.create({
   rowDivider: { height: 1, marginLeft: 65 },
   notice: { minHeight: 44, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12 },
   noticeText: { flex: 1, fontSize: 11, lineHeight: 16, fontWeight: '700' },
+  accountCard: { gap: 13 },
+  accountStatus: { fontSize: 13, fontWeight: '700' },
+  accountIdentity: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  accountIcon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  accountCopy: { flex: 1, paddingRight: 8 },
+  accountLabel: { fontSize: 14, fontWeight: '800' },
+  accountDetail: { fontSize: 11, marginTop: 2, lineHeight: 15 },
+  signOutButton: { minHeight: 46, borderWidth: 1, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  signOutText: { fontSize: 13, fontWeight: '800' },
+  accountNotice: { fontSize: 11, lineHeight: 16, marginTop: 7 },
   sheetBackdrop: { flex: 1, justifyContent: 'flex-end' },
   qrisSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 28 },
   sheetTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
