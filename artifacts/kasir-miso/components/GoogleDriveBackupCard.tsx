@@ -18,7 +18,7 @@ import {
   useSaveDriveBackup,
   type SaveDriveBackupBody,
 } from '@workspace/api-client-react';
-import { PrimaryButton, Surface } from '@/components/WarungUI';
+import { Surface } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
 import { useWarung } from '@/context/WarungContext';
 import { mimeTypeFromUri, persistImageBase64, readImageAsBase64 } from '@/utils/persistentImage';
@@ -414,82 +414,112 @@ export function GoogleDriveBackupCard({
 
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionKicker, { color: c.primary }]}>BACKUP ONLINE</Text>
-      <Text style={[styles.sectionTitle, { color: c.foreground }]}>Google Drive</Text>
-      <Text style={[styles.sectionBody, { color: c.mutedForeground }]}>
-        Data bisa dicadangkan dan dipulihkan dari perangkat lain menggunakan akun Google yang sama.
-      </Text>
       <Surface style={styles.card}>
-        <View style={[styles.icon, { backgroundColor: c.secondary }]}>
-          <Ionicons name="cloud-outline" size={23} color={c.primary} />
+        <View style={styles.compactHeader}>
+          <View style={[styles.icon, { backgroundColor: c.secondary }]}>
+            <Ionicons name="cloud-outline" size={21} color={c.primary} />
+          </View>
+          <View style={styles.compactCopy}>
+            <Text style={[styles.status, { color: c.foreground }]}>Backup Online</Text>
+            <Text style={[styles.detail, { color: c.mutedForeground }]}>
+              {!isSignedIn
+                ? 'Login diperlukan'
+                : isConnected
+                  ? `Terhubung${driveConnectionQuery.data?.email ? ` · ${driveConnectionQuery.data.email}` : ''}`
+                  : 'Menghubungkan Google Drive'}
+            </Text>
+          </View>
+          {isConnected ? (
+            <Pressable
+              testID="google-drive-disconnect"
+              accessibilityRole="button"
+              accessibilityLabel="Putuskan Google Drive"
+              disabled={disconnectDriveMutation.isPending}
+              onPress={() => disconnectDriveMutation.mutate()}
+              style={({ pressed }) => [
+                styles.disconnect,
+                { borderColor: c.border, opacity: pressed || disconnectDriveMutation.isPending ? 0.6 : 1 },
+              ]}
+            >
+              <Ionicons name="unlink-outline" size={15} color={c.destructive} />
+              <Text style={[styles.disconnectText, { color: c.destructive }]}>
+                {disconnectDriveMutation.isPending ? '...' : 'Putuskan'}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
-        <Text style={[styles.status, { color: c.foreground }]}>
-          {!isSignedIn
-            ? 'Login diperlukan'
-            : isConnected
-              ? `Terhubung${driveConnectionQuery.data?.email ? `: ${driveConnectionQuery.data.email}` : ''}`
-              : 'Menghubungkan Google Drive'}
-        </Text>
-        <Text style={[styles.detail, { color: c.mutedForeground }]}>
-          {!isSignedIn
-            ? 'Masuk ke akun Google untuk mengaktifkan backup online.'
-            : isConnected
-              ? 'Backup online siap digunakan dari tab Lainnya.'
-              : 'Google akan meminta persetujuan akses Drive satu kali.'}
-        </Text>
 
         {!isSignedIn ? (
           <Text style={[styles.notice, { color: c.mutedForeground }]}>
-            Buka halaman Akun & Pengaturan untuk masuk sebelum menggunakan backup online.
+            Masuk dari kartu Akun di tab Lainnya untuk mengaktifkan.
           </Text>
-        ) : isConnected ? (
+        ) : !isConnected ? (
           <Pressable
-            testID="google-drive-disconnect"
-            accessibilityRole="button"
-            accessibilityLabel="Putuskan Google Drive"
-            disabled={disconnectDriveMutation.isPending}
-            onPress={() => disconnectDriveMutation.mutate()}
-            style={({ pressed }) => [styles.disconnect, { borderColor: c.border, opacity: pressed || disconnectDriveMutation.isPending ? 0.6 : 1 }]}
-          >
-            <Ionicons name="unlink-outline" size={16} color={c.destructive} />
-            <Text style={[styles.disconnectText, { color: c.destructive }]}>
-              {disconnectDriveMutation.isPending ? 'Memutuskan...' : 'Putuskan'}
-            </Text>
-          </Pressable>
-        ) : (
-          <PrimaryButton
             testID="google-drive-connect"
-            icon="link-outline"
+            accessibilityRole="button"
             disabled={!driveRequest || drivePromptPending || connectDriveMutation.isPending}
             onPress={() => void handleDriveConnect()}
+            style={({ pressed }) => [
+              styles.compactConnect,
+              { borderColor: c.border, opacity: pressed || drivePromptPending || connectDriveMutation.isPending ? 0.6 : 1 },
+            ]}
           >
-            {connectDriveMutation.isPending
-              ? 'Menghubungkan...'
-              : drivePromptPending
-                ? 'Membuka Google...'
-                : 'Hubungkan ulang'}
-          </PrimaryButton>
-        )}
+            <Ionicons name="link-outline" size={15} color={c.primary} />
+            <Text style={[styles.compactConnectText, { color: c.primary }]}>
+              {connectDriveMutation.isPending
+                ? 'Menghubungkan...'
+                : drivePromptPending
+                  ? 'Membuka Google...'
+                  : 'Hubungkan ulang'}
+            </Text>
+          </Pressable>
+        ) : null}
 
         {driveNotice ? <Text style={[styles.notice, { color: c.destructive }]}>{driveNotice}</Text> : null}
         {driveProgress ? <Text style={[styles.notice, { color: c.primary }]}>{driveProgress}</Text> : null}
 
-        <PrimaryButton
-          testID="google-drive-backup"
-          icon="cloud-upload-outline"
-          disabled={!isConnected || !warung.hydrated || driveBusy || backupMutation.isPending}
-          onPress={() => void handleDriveBackup()}
-        >
-          {driveBusy ? 'Memproses...' : 'Backup online sekarang'}
-        </PrimaryButton>
-        <PrimaryButton
-          testID="google-drive-restore"
-          icon="cloud-download-outline"
-          disabled={!isConnected || !warung.hydrated || driveBusy || !hasBackups}
-          onPress={handleDriveRestore}
-        >
-          {driveBusy ? 'Memproses...' : 'Restore online terbaru'}
-        </PrimaryButton>
+        <View style={styles.actionRow}>
+          <Pressable
+            testID="google-drive-backup"
+            accessibilityRole="button"
+            accessibilityLabel="Backup online sekarang"
+            disabled={!isConnected || !warung.hydrated || driveBusy || backupMutation.isPending}
+            onPress={() => void handleDriveBackup()}
+            style={({ pressed }) => [
+              styles.actionButton,
+              {
+                borderColor: c.border,
+                backgroundColor: !isConnected || !warung.hydrated ? c.muted : c.card,
+                opacity: pressed || !isConnected || !warung.hydrated || driveBusy || backupMutation.isPending ? 0.6 : 1,
+              },
+            ]}
+          >
+            <Ionicons name="cloud-upload-outline" size={16} color={c.primary} />
+            <Text style={[styles.actionButtonText, { color: c.foreground }]}>
+              {driveBusy ? 'Memproses...' : 'Backup'}
+            </Text>
+          </Pressable>
+          <Pressable
+            testID="google-drive-restore"
+            accessibilityRole="button"
+            accessibilityLabel="Restore online terbaru"
+            disabled={!isConnected || !warung.hydrated || driveBusy || !hasBackups}
+            onPress={handleDriveRestore}
+            style={({ pressed }) => [
+              styles.actionButton,
+              {
+                borderColor: c.border,
+                backgroundColor: !isConnected || !warung.hydrated || !hasBackups ? c.muted : c.card,
+                opacity: pressed || !isConnected || !warung.hydrated || driveBusy || !hasBackups ? 0.6 : 1,
+              },
+            ]}
+          >
+            <Ionicons name="cloud-download-outline" size={16} color={c.primary} />
+            <Text style={[styles.actionButtonText, { color: c.foreground }]}>
+              {driveBusy ? 'Memproses...' : 'Restore'}
+            </Text>
+          </Pressable>
+        </View>
         {backupMutation.data?.webViewLink ? (
           <Pressable
             accessibilityRole="link"
@@ -507,17 +537,21 @@ export function GoogleDriveBackupCard({
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 16 },
-  sectionKicker: { fontSize: 10, fontWeight: '800', letterSpacing: 1.4, marginTop: 2 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', marginTop: 4 },
-  sectionBody: { fontSize: 12, lineHeight: 18, marginTop: 5, marginBottom: 12 },
-  card: { gap: 10 },
-  icon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  status: { fontSize: 14, fontWeight: '800' },
-  detail: { fontSize: 11, lineHeight: 16 },
-  disconnect: { minHeight: 42, borderWidth: 1, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
-  disconnectText: { fontSize: 12, fontWeight: '800' },
+  section: { marginBottom: 12 },
+  card: { gap: 8, padding: 12 },
+  compactHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  compactCopy: { flex: 1, minWidth: 0 },
+  icon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  status: { fontSize: 13, fontWeight: '800' },
+  detail: { fontSize: 10, lineHeight: 14, marginTop: 2 },
+  disconnect: { minHeight: 32, borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 },
+  disconnectText: { fontSize: 10, fontWeight: '800' },
+  compactConnect: { minHeight: 34, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, alignSelf: 'flex-start', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 5 },
+  compactConnectText: { fontSize: 11, fontWeight: '800' },
   notice: { fontSize: 11, lineHeight: 16, fontWeight: '700' },
+  actionRow: { flexDirection: 'row', gap: 8 },
+  actionButton: { flex: 1, minHeight: 40, borderWidth: 1, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  actionButtonText: { fontSize: 11, fontWeight: '800' },
   driveLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
   driveLinkText: { fontSize: 12, fontWeight: '800' },
 });
