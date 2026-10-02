@@ -1,13 +1,11 @@
 import React, { ReactNode, useEffect, useState } from 'react';
-import { Image, Modal, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { PageHeader, Screen, Surface, ThemeActions } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
-import { useLanguage } from '@/context/LanguageContext';
-import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
 import { persistImageAsset } from '@/utils/persistentImage';
 
 const BUSINESS_PROFILE_STORAGE_KEY = 'warung-business-profile-v1';
@@ -58,17 +56,13 @@ function ProfileRow({
   testID: string;
 }) {
   const c = useColors();
-  const { t } = useLanguage();
   const hasValue = Boolean(value.trim());
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={t('{label}. {value}', {
-        label: t(label),
-        value: hasValue ? value : t(placeholder),
-      })}
+      accessibilityLabel={`${label}. ${hasValue ? value : placeholder}`}
       onPress={onPress}
       style={({ pressed }) => [s.profileRow, { opacity: pressed ? 0.62 : 1 }]}
     >
@@ -78,7 +72,7 @@ function ProfileRow({
       <View style={s.profileCopy}>
         <Text style={[s.profileLabel, { color: c.mutedForeground }]}>{label}</Text>
         <Text style={[s.profileValue, { color: hasValue ? c.foreground : c.primary }]}>
-          {hasValue ? <NativeText>{value}</NativeText> : placeholder}
+          {hasValue ? value : placeholder}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={22} color={c.mutedForeground} />
@@ -99,7 +93,6 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 export default function BusinessProfileScreen() {
   const c = useColors();
   const router = useRouter();
-  const { t } = useLanguage();
   const [profile, setProfile] = useState<BusinessProfile>(emptyProfile);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [draft, setDraft] = useState('');
@@ -147,7 +140,7 @@ export default function BusinessProfileScreen() {
   const saveField = async () => {
     if (!editingField) return;
     const nextProfile: BusinessProfile = { ...profile, [editingField]: draft.trim() };
-    await persistProfile(nextProfile, t('{field} berhasil diperbarui.', { field: t(fieldMeta[editingField].label) }));
+    await persistProfile(nextProfile, `${fieldMeta[editingField].label} berhasil diperbarui.`);
     setEditingField(null);
   };
 
@@ -162,7 +155,7 @@ export default function BusinessProfileScreen() {
       });
       if (result.canceled || !result.assets[0]?.uri) return;
       const logoUri = await persistImageAsset(result.assets[0]);
-      await persistProfile({ ...profile, logoUri }, t('Logo usaha berhasil disimpan.'));
+      await persistProfile({ ...profile, logoUri }, 'Logo usaha berhasil disimpan.');
     } catch {
       Alert.alert('Logo tidak tersedia', 'Logo tidak bisa dipilih. Coba pilih gambar lain.');
     }

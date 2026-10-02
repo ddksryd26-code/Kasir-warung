@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Pressable as NativePressable, ScrollView, StyleSheet, Text as NativeText, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import { consignmentIdFromKey, formatRp, isConsignmentKey, isDateInReportPeriod, ReportPeriod, useWarung } from '@/context/WarungContext';
 import { calculateReportMetrics, isActiveSale } from '@/domain/reporting';
 import { useColors } from '@/hooks/useColors';
 import { Badge, EmptyState, PageHeader, Screen, SectionHeader, Surface } from '@/components/WarungUI';
-import { useLanguage } from '@/context/LanguageContext';
-import { Pressable, Text } from '@/components/LocalizedPrimitives';
 
 type ChartPoint = { date: string; label: string; revenue: number; expense: number };
 
@@ -16,7 +14,7 @@ function localDateKey(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function chartPoints(period: ReportPeriod, sales: ReturnType<typeof useWarung>['sales'], expenses: ReturnType<typeof useWarung>['expenses'], locale: string): ChartPoint[] {
+function chartPoints(period: ReportPeriod, sales: ReturnType<typeof useWarung>['sales'], expenses: ReturnType<typeof useWarung>['expenses']): ChartPoint[] {
   const now = new Date();
   const dates: Date[] = [];
   if (period === 'Hari ini') {
@@ -42,24 +40,23 @@ function chartPoints(period: ReportPeriod, sales: ReturnType<typeof useWarung>['
     const expense = expenses.filter((item) => item.date === key).reduce((sum, item) => sum + item.amount, 0);
     return {
       date: key,
-      label: period === 'Bulan ini' ? String(date.getDate()) : date.toLocaleDateString(locale, { weekday: 'short' }).replace('.', ''),
+      label: period === 'Bulan ini' ? String(date.getDate()) : date.toLocaleDateString('id-ID', { weekday: 'short' }).replace('.', ''),
       revenue,
       expense,
     };
   });
 }
 
-function formatChartAmount(value: number, language: 'id' | 'en') {
-  if (value >= 1000000) return `Rp ${(value / 1000000).toFixed(value % 1000000 ? 1 : 0)} ${language === 'en' ? 'M' : 'jt'}`;
-  if (value >= 1000) return `Rp ${Math.round(value / 1000)} ${language === 'en' ? 'K' : 'rb'}`;
+function formatChartAmount(value: number) {
+  if (value >= 1000000) return `Rp ${(value / 1000000).toFixed(value % 1000000 ? 1 : 0)} jt`;
+  if (value >= 1000) return `Rp ${Math.round(value / 1000)} rb`;
   return `Rp ${value}`;
 }
 
 function IncomeExpenseChart({ period, sales, expenses }: { period: ReportPeriod; sales: ReturnType<typeof useWarung>['sales']; expenses: ReturnType<typeof useWarung>['expenses'] }) {
   const c = useColors();
-  const { language, locale, t } = useLanguage();
   const { width: windowWidth } = useWindowDimensions();
-  const points = chartPoints(period, sales, expenses, locale);
+  const points = chartPoints(period, sales, expenses);
   const chartWidth = Math.max(windowWidth - 62, points.length * (period === 'Bulan ini' ? 31 : 62));
   const chartHeight = 188;
   const plotTop = 15;
@@ -78,7 +75,7 @@ function IncomeExpenseChart({ period, sales, expenses }: { period: ReportPeriod;
       <View style={s.chartHeader}>
         <View>
           <Text style={[s.chartTitle, { color: c.foreground }]}>Pendapatan vs pengeluaran</Text>
-          <Text style={[s.chartCaption, { color: c.mutedForeground }]}>{t('Per hari · {period}', { period: t(period).toLowerCase() })}</Text>
+          <Text style={[s.chartCaption, { color: c.mutedForeground }]}>Per hari · {period.toLowerCase()}</Text>
         </View>
         <View style={s.legend}>
           <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: revenueColor }]} /><Text style={[s.legendText, { color: c.mutedForeground }]}>Masuk</Text></View>
@@ -88,7 +85,7 @@ function IncomeExpenseChart({ period, sales, expenses }: { period: ReportPeriod;
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chartScroll}>
         <View>
           <View style={s.yAxisLabels}>
-            {ticks.map((tick, index) => <Text key={index} style={[s.yAxisLabel, { color: c.mutedForeground }]}>{formatChartAmount(tick, language)}</Text>)}
+            {ticks.map((tick, index) => <Text key={index} style={[s.yAxisLabel, { color: c.mutedForeground }]}>{formatChartAmount(tick)}</Text>)}
           </View>
           <Svg width={chartWidth} height={chartHeight}>
             {ticks.map((_, index) => {
@@ -117,7 +114,6 @@ function IncomeExpenseChart({ period, sales, expenses }: { period: ReportPeriod;
 
 export default function ReportsScreen() {
   const c = useColors();
-  const { t } = useLanguage();
   const { menus, consignments, sales, expenses, inventory, savingsEntries } = useWarung();
   const [period, setPeriod] = useState<ReportPeriod>('Hari ini');
   const periodSales = sales.filter((sale) => isDateInReportPeriod(sale.date, period) && isActiveSale(sale));
@@ -132,7 +128,7 @@ export default function ReportsScreen() {
   const savingBreakdown = Object.entries(periodSavings.reduce<Record<string, { name: string; stockName: string; qty: number; amount: number }>>((result, entry) => {
     const key = `${entry.name}:${entry.inventoryId}`;
      const stock = inventory.find((item) => item.id === entry.inventoryId);
-      const current = result[key] || { name: entry.name, stockName: entry.inventoryId ? stock?.name || t('Bahan dihapus') : t('Penyisihan manual'), qty: 0, amount: 0 };
+     const current = result[key] || { name: entry.name, stockName: entry.inventoryId ? stock?.name || 'Bahan dihapus' : 'Penyisihan manual', qty: 0, amount: 0 };
     current.qty += entry.qty;
     current.amount += entry.amount;
     result[key] = current;
@@ -152,14 +148,14 @@ export default function ReportsScreen() {
        <SectionHeader title="Penyisihan dana" meta={formatRp(savingsTotal)} icon="wallet-outline" />
        <Surface style={s.savingsSummary}>
          <View style={s.savingsSummaryRow}><View><Text style={[s.metricLabel, { color: c.mutedForeground }]}>TOTAL DISISIHKAN</Text><Text style={[s.savingsValue, { color: c.primary }]}>{formatRp(savingsTotal)}</Text></View><View style={s.savingsSummaryRight}><Text style={[s.metricLabel, { color: c.mutedForeground }]}>UANG TERSISA</Text><Text style={[s.savingsValue, { color: remainingAfterSavings >= 0 ? c.foreground : c.destructive }]}>{formatRp(remainingAfterSavings)}</Text></View></View>
-          {!savingBreakdown.length ? <Text style={[s.chartEmpty, { color: c.mutedForeground }]}>Belum ada penyisihan pada periode ini.</Text> : savingBreakdown.map(([key, item]) => <View key={key} style={[s.savingRow, { borderTopColor: c.border }]}><View style={s.flex}><NativeText style={[s.bestName, { color: c.foreground }]}>{item.name}</NativeText><NativeText style={[s.chartCaption, { color: c.mutedForeground }]}>{item.stockName} · {item.qty} {t('satuan bahan')}</NativeText></View><Text style={[s.bestQty, { color: c.primary }]}>{formatRp(item.amount)}</Text></View>)}
+         {!savingBreakdown.length ? <Text style={[s.chartEmpty, { color: c.mutedForeground }]}>Belum ada penyisihan pada periode ini.</Text> : savingBreakdown.map(([key, item]) => <View key={key} style={[s.savingRow, { borderTopColor: c.border }]}><View style={s.flex}><Text style={[s.bestName, { color: c.foreground }]}>{item.name}</Text><Text style={[s.chartCaption, { color: c.mutedForeground }]}>{item.stockName} · {item.qty} satuan bahan</Text></View><Text style={[s.bestQty, { color: c.primary }]}>{formatRp(item.amount)}</Text></View>)}
        </Surface>
       <SectionHeader title="Arus kas" icon="bar-chart-outline" />
       <IncomeExpenseChart period={period} sales={sales} expenses={expenses} />
       <SectionHeader title="Uang masuk" icon="trending-up-outline" />
       <View style={s.grid}><Surface style={s.metric}><Ionicons name="cash-outline" size={20} color={c.primary} /><Text style={[s.metricLabel, { color: c.mutedForeground }]}>Tunai</Text><Text style={[s.metricValue, { color: c.foreground }]}>{formatRp(cash)}</Text></Surface><Surface style={s.metric}><Ionicons name="qr-code-outline" size={20} color={c.primary} /><Text style={[s.metricLabel, { color: c.mutedForeground }]}>QRIS</Text><Text style={[s.metricValue, { color: c.foreground }]}>{formatRp(qris)}</Text></Surface></View>
        <SectionHeader title="Item terlaris" meta={best.length ? `${best.length} item terjual` : undefined} icon="trophy-outline" />
-        {!best.length ? <EmptyState icon="bar-chart-outline" title="Belum ada penjualan" body="Ringkasan item terlaris akan muncul setelah nota dibayar." /> : <Surface>{best.slice(0, 4).map(([key, qty], index) => { const name = isConsignmentKey(key) ? 'Titipan' : menus.find((menu) => menu.id === key)?.name; const savedName = isConsignmentKey(key) ? consignments.find((item) => item.id === consignmentIdFromKey(key))?.name || t('Titipan dihapus') : name || t('Menu dihapus'); const itemLabel = isConsignmentKey(key) ? t('{name} (titipan)', { name: savedName }) : savedName; return <View key={key} style={s.best}><Badge tone={index === 0 ? 'accent' : 'muted'}>{index + 1}</Badge><NativeText style={[s.bestName, { color: c.foreground }]}>{itemLabel}</NativeText><Text style={[s.bestQty, { color: c.primary }]}>{qty} {t('item', { count: qty })}</Text></View>; })}</Surface>}
+       {!best.length ? <EmptyState icon="bar-chart-outline" title="Belum ada penjualan" body="Ringkasan item terlaris akan muncul setelah nota dibayar." /> : <Surface>{best.slice(0, 4).map(([key, qty], index) => { const name = isConsignmentKey(key) ? 'Titipan' : menus.find((menu) => menu.id === key)?.name; return <View key={key} style={s.best}><Badge tone={index === 0 ? 'accent' : 'muted'}>{index + 1}</Badge><Text style={[s.bestName, { color: c.foreground }]}>{isConsignmentKey(key) ? `${consignments.find((item) => item.id === consignmentIdFromKey(key))?.name || 'Titipan dihapus'} (titipan)` : name || 'Menu dihapus'}</Text><Text style={[s.bestQty, { color: c.primary }]}>{qty} item</Text></View>; })}</Surface>}
     </Screen>
   );
 }

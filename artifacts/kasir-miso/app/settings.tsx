@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PageHeader, Screen, Surface } from '@/components/WarungUI';
 import { themeOptions } from '@/constants/colors';
 import { useColors } from '@/hooks/useColors';
 import { useTheme } from '@/context/ThemeContext';
-import { useLanguage, type LanguageCode } from '@/context/LanguageContext';
-import { Pressable, Text } from '@/components/LocalizedPrimitives';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-type PickerName = 'theme' | 'mode' | 'language' | null;
+type PickerName = 'theme' | 'mode' | null;
 
 function SettingsPickerRow({
   icon,
@@ -29,13 +27,12 @@ function SettingsPickerRow({
   testID?: string;
 }) {
   const c = useColors();
-  const { t } = useLanguage();
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={t('{label}, {value}. Buka pilihan', { label, value })}
+      accessibilityLabel={`${label}, ${value}. Buka pilihan`}
       onPress={onPress}
       style={({ pressed }) => [
         s.pickerRow,
@@ -63,7 +60,6 @@ function SettingsContent() {
   const c = useColors();
   const router = useRouter();
   const { mode, themeId, selectTheme, toggleMode } = useTheme();
-  const { language, setLanguage, languageSaveError } = useLanguage();
   const [picker, setPicker] = useState<PickerName>(null);
   const selectedTheme = themeOptions.find((option) => option.id === themeId);
   const modeLabel = mode === 'light' ? 'Terang' : 'Gelap';
@@ -94,9 +90,9 @@ function SettingsContent() {
       />
 
       <View style={s.section}>
-        <Text style={[s.sectionKicker, { color: c.primary }]}>PREFERENSI</Text>
+        <Text style={[s.sectionKicker, { color: c.primary }]}>TAMPILAN</Text>
         <Text style={[s.sectionBody, { color: c.mutedForeground }]}>
-          Tema, mode, dan bahasa tersimpan otomatis di perangkat ini.
+          Pilihan tampilan tersimpan otomatis di perangkat ini.
         </Text>
         <Surface style={s.settingsCard}>
           <SettingsPickerRow
@@ -115,20 +111,7 @@ function SettingsContent() {
             testID="mode-picker-row"
             onPress={() => setPicker('mode')}
           />
-          <View style={[s.rowDivider, { backgroundColor: c.border }]} />
-          <SettingsPickerRow
-            icon="language-outline"
-            label="Bahasa"
-            value={language === 'en' ? 'English' : 'Bahasa Indonesia'}
-            testID="language-picker-row"
-            onPress={() => setPicker('language')}
-          />
         </Surface>
-        {languageSaveError ? (
-          <Text style={[s.sectionBody, { color: c.destructive, marginTop: 8, marginBottom: 0 }]}>
-            Pengaturan bahasa belum berhasil disimpan. Coba lagi.
-          </Text>
-        ) : null}
       </View>
 
       <Modal
@@ -141,15 +124,9 @@ function SettingsContent() {
           <View style={[s.pickerModal, { backgroundColor: c.card }]}>
             <View style={s.modalHeader}>
               <View>
-                <Text style={[s.modalKicker, { color: c.primary }]}>
-                  {picker === 'language' ? 'BAHASA APLIKASI' : 'TAMPILAN APLIKASI'}
-                </Text>
+                <Text style={[s.modalKicker, { color: c.primary }]}>TAMPILAN APLIKASI</Text>
                 <Text style={[s.modalTitle, { color: c.foreground }]}>
-                  {picker === 'theme'
-                    ? 'Pilih tema warna'
-                    : picker === 'mode'
-                      ? 'Pilih mode aplikasi'
-                      : 'Pilih bahasa'}
+                  {picker === 'theme' ? 'Pilih tema warna' : 'Pilih mode aplikasi'}
                 </Text>
               </View>
               <Pressable
@@ -200,7 +177,7 @@ function SettingsContent() {
                       </Pressable>
                     );
                   })
-                : picker === 'mode' ? (
+                : (
                     <>
                       <Pressable
                         testID="light-mode-option"
@@ -251,51 +228,6 @@ function SettingsContent() {
                         {mode === 'dark' ? <Ionicons name="checkmark-circle" size={20} color={c.primary} /> : null}
                       </Pressable>
                     </>
-                  ) : (
-                    ([
-                      {
-                        code: 'id' as const,
-                        label: 'Bahasa Indonesia',
-                        detail: 'Gunakan Bahasa Indonesia di seluruh aplikasi',
-                      },
-                      {
-                        code: 'en' as const,
-                        label: 'English',
-                        detail: 'Use English throughout the app',
-                      },
-                    ] satisfies { code: LanguageCode; label: string; detail: string }[]).map((option) => {
-                      const selected = option.code === language;
-                      return (
-                        <Pressable
-                          key={option.code}
-                          testID={`language-option-${option.code}`}
-                          accessibilityRole="radio"
-                          accessibilityState={{ selected }}
-                          accessibilityLabel={option.label}
-                          onPress={() => {
-                            setLanguage(option.code);
-                            setPicker(null);
-                          }}
-                          style={({ pressed }) => [
-                            s.choiceRow,
-                            {
-                              backgroundColor: selected ? c.secondary : c.card,
-                              borderColor: selected ? c.primary : c.border,
-                              opacity: pressed ? 0.7 : 1,
-                            },
-                          ]}
-                        >
-                          <View style={[s.modeIcon, { backgroundColor: selected ? c.primary : c.muted }]}>
-                            <Ionicons name="language-outline" size={19} color={selected ? c.primaryForeground : c.mutedForeground} />
-                          </View>
-                          <View style={s.choiceCopy}>
-                            <Text style={[s.choiceLabel, { color: c.foreground }]}>{option.label}</Text>
-                            <Text style={[s.choiceDetail, { color: c.mutedForeground }]}>{option.detail}</Text>
-                          </View>
-                          {selected ? <Ionicons name="checkmark-circle" size={20} color={c.primary} /> : null}
-                        </Pressable>
-                      );
-                    })
                   )}
             </ScrollView>
           </View>

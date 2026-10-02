@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
@@ -15,8 +15,6 @@ import {
   useWarung,
 } from '@/context/WarungContext';
 import { PrimaryButton, SectionHeader, Surface } from '@/components/WarungUI';
-import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
-import { useLanguage } from '@/context/LanguageContext';
 
 const standardMenuImage = require('../assets/images/icon.png');
 
@@ -28,7 +26,6 @@ interface OrderComposerProps {
 
 export function OrderComposer({ targetOrder = null, onComplete, onCancel }: OrderComposerProps) {
   const c = useColors();
-  const { language, t } = useLanguage();
   const {
     menus,
     inventory,
@@ -55,9 +52,6 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
     return (catalogItem?.price ?? 0) + (variant?.priceDelta ?? 0);
   };
   const draftTotal = cart.reduce((sum, item) => sum + getItemPrice(item) * item.qty, 0);
-  const orderDescription = targetOrder?.tables.length
-    ? targetOrder.tables.map((table) => `M${table}`).join(' + ')
-    : 'pesanan ini';
 
   const getMenuAvailability = (menu: MenuKey, variantId?: string) => {
     const otherCartItems = cart.filter((item) => item.menu !== menu || item.variantId !== variantId);
@@ -165,7 +159,7 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
             </View>
             <View style={s.flex}>
               <Text style={[s.composerTitle, { color: c.foreground }]}>
-                {isAdding ? t('Tambah ke {order}', { order: orderDescription }) : 'Pesanan baru'}
+                {isAdding ? `Tambah ke ${targetOrder?.tables.length ? targetOrder.tables.map((table) => `M${table}`).join(' + ') : 'pesanan ini'}` : 'Pesanan baru'}
               </Text>
               <Text style={[s.composerSub, { color: c.mutedForeground }]}>
                 {isAdding ? 'Tambahkan menu tanpa membuat nota baru.' : 'Pilih meja, menu, lalu kirim ke dapur.'}
@@ -217,12 +211,7 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
           </View>
         </View>
 
-        <SectionHeader
-          title="Pilih menu"
-          meta={cart.length
-            ? t('{count} item', { count: cart.reduce((sum, item) => sum + item.qty, 0) })
-            : 'ketuk + untuk tambah'}
-        />
+        <SectionHeader title="Pilih menu" meta={cart.length ? `${cart.reduce((sum, item) => sum + item.qty, 0)} item` : 'ketuk + untuk tambah'} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoryRow}>
           {menuCategories.map((category) => (
             <Pressable
@@ -237,9 +226,7 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
                 },
               ]}
             >
-              <Text style={[s.categoryChipText, { color: menuCategory === category ? c.primaryForeground : c.secondaryForeground }]}>
-                {category === 'Semua' && language === 'en' ? 'All' : category}
-              </Text>
+              <Text style={[s.categoryChipText, { color: menuCategory === category ? c.primaryForeground : c.secondaryForeground }]}>{category}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -258,30 +245,20 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
                   <View style={s.menuCopy}>
                     <Text numberOfLines={1} style={[s.menuCardName, { color: c.foreground }]}>{item.name}</Text>
                     <Text style={[s.menuCardPrice, { color: c.primary }]}>{formatRp(item.price)}</Text>
-                    {item.variants?.length ? (
-                      <Text style={[s.variantHint, { color: c.mutedForeground }]}>
-                        {t('{count} pilihan varian', { count: item.variants.length })}
-                      </Text>
-                    ) : null}
+                    {item.variants?.length ? <Text style={[s.variantHint, { color: c.mutedForeground }]}>{item.variants.length} pilihan varian</Text> : null}
                     <Text style={[s.stockText, { color: unavailable ? c.destructive : c.mutedForeground }]}>
-                      {unavailable
-                        ? 'Habis'
-                        : item.isConsignment
-                          ? t('{count} biji', { count: available - qty })
-                          : Number.isFinite(available)
-                            ? t('{count} porsi', { count: available - qty })
-                            : 'Tersedia'}
+                      {unavailable ? 'Habis' : item.isConsignment ? `${available - qty} biji` : Number.isFinite(available) ? `${available - qty} porsi` : 'Tersedia'}
                     </Text>
                   </View>
                 </View>
                 <View style={s.cardQtyRow}>
-                  <Pressable accessibilityLabel={t('Kurangi {item}', { item: item.name })} onPress={() => removeMenu(item)} style={[s.qty, { backgroundColor: c.secondary }]}>
+                  <Pressable accessibilityLabel={`Kurangi ${item.name}`} onPress={() => removeMenu(item)} style={[s.qty, { backgroundColor: c.secondary }]}>
                     <Ionicons name="remove" size={16} color={c.secondaryForeground} />
                   </Pressable>
                   <Text style={[s.qtyValue, { color: c.foreground }]}>{qty}</Text>
                   <Pressable
                     testID={`add-menu-${item.id}`}
-                    accessibilityLabel={t('Tambah {item}', { item: item.name })}
+                    accessibilityLabel={`Tambah ${item.name}`}
                     disabled={unavailable}
                     onPress={() => addMenu(item)}
                     style={({ pressed }) => [s.qty, { backgroundColor: unavailable ? c.muted : c.primary, opacity: unavailable ? 0.45 : pressed ? 0.7 : 1 }]}
@@ -341,10 +318,8 @@ export function OrderComposer({ targetOrder = null, onComplete, onCancel }: Orde
               <Pressable accessibilityLabel="Kurangi jumlah meja" disabled={availableTableCount <= 1} onPress={() => changeAvailableTableCount(-1)} style={[s.tableCountButton, { backgroundColor: availableTableCount <= 1 ? c.muted : c.secondary }]}>
                 <Ionicons name="remove" size={19} color={availableTableCount <= 1 ? c.mutedForeground : c.secondaryForeground} />
               </Pressable>
-              <Text style={[s.tableCountText, { color: c.foreground }]}>
-                {t('{count} meja tampil', { count: availableTableCount })}
-              </Text>
-              <Pressable accessibilityLabel={t('Tambah meja M{number}', { number: availableTableCount + 1 })} onPress={() => changeAvailableTableCount(1)} style={[s.tableCountButton, { backgroundColor: c.primary }]}>
+              <Text style={[s.tableCountText, { color: c.foreground }]}>{availableTableCount} meja tampil</Text>
+              <Pressable accessibilityLabel={`Tambah meja M${availableTableCount + 1}`} onPress={() => changeAvailableTableCount(1)} style={[s.tableCountButton, { backgroundColor: c.primary }]}>
                 <Ionicons name="add" size={19} color={c.primaryForeground} />
               </Pressable>
             </View>

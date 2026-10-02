@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getDriveImage,
@@ -22,8 +22,6 @@ import { Surface } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
 import { useWarung } from '@/context/WarungContext';
 import { mimeTypeFromUri, persistImageBase64, readImageAsBase64 } from '@/utils/persistentImage';
-import { Alert, Pressable, Text } from '@/components/LocalizedPrimitives';
-import { useLanguage } from '@/context/LanguageContext';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -149,13 +147,13 @@ function collectDriveImageReferences(state: SaveDriveBackupBody['state']) {
 
 async function restoreDriveImages(
   state: SaveDriveBackupBody['state'],
-  onProgress: (completed: number, total: number) => void,
+  onProgress: (message: string) => void,
 ) {
   const references = collectDriveImageReferences(state);
   const replacements = new Map<string, string>();
   let completed = 0;
   for (const [reference, image] of references) {
-    onProgress(completed + 1, references.size);
+    onProgress(`Mengunduh gambar ${completed + 1} dari ${references.size}...`);
     const downloaded = await getDriveImage(image.fileId);
     replacements.set(
       reference,
@@ -171,7 +169,6 @@ export function GoogleDriveBackupCard({
   isSignedIn,
 }: GoogleDriveBackupCardProps) {
   const c = useColors();
-  const { t } = useLanguage();
   const warung = useWarung();
   const queryClient = useQueryClient();
   const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID ?? '';
@@ -345,10 +342,7 @@ export function GoogleDriveBackupCard({
       const prepared = await prepareDriveBackupState(warung);
       const replacements = new Map<string, string>();
       for (const [index, image] of prepared.pending.entries()) {
-        setDriveProgress(t('Mengunggah gambar {current} dari {total}...', {
-          current: index + 1,
-          total: prepared.pending.length,
-        }));
+        setDriveProgress(`Mengunggah gambar ${index + 1} dari ${prepared.pending.length}...`);
         const imageData = await readImageAsBase64(image.uri);
         const uploaded = await uploadDriveImage({
           fileName: image.fileName,
@@ -382,9 +376,7 @@ export function GoogleDriveBackupCard({
       setDriveProgress('Membaca backup online...');
       const manifest = await restoreDriveBackup({ fileId });
       setDriveProgress('Menyiapkan gambar restore...');
-      const restoredState = await restoreDriveImages(manifest.data, (current, total) => {
-        setDriveProgress(t('Mengunduh gambar {current} dari {total}...', { current, total }));
-      });
+      const restoredState = await restoreDriveImages(manifest.data, setDriveProgress);
       await warung.restoreState(restoredState);
       Alert.alert('Restore berhasil', 'Data dan gambar dari Google Drive sudah dipulihkan ke perangkat ini.');
     } catch (error) {
@@ -405,7 +397,7 @@ export function GoogleDriveBackupCard({
     }
     Alert.alert(
       'Pulihkan backup online terbaru?',
-      t('Data aplikasi akan diganti dengan backup {name}.', { name: latestBackup.name }),
+      `Data aplikasi akan diganti dengan backup ${latestBackup.name}.`,
       [
         { text: 'Batal', style: 'cancel' },
         {
@@ -433,9 +425,7 @@ export function GoogleDriveBackupCard({
               {!isSignedIn
                 ? 'Login diperlukan'
                 : isConnected
-                  ? driveConnectionQuery.data?.email
-                    ? t('Terhubung · {email}', { email: driveConnectionQuery.data.email })
-                    : 'Terhubung'
+                  ? `Terhubung${driveConnectionQuery.data?.email ? ` · ${driveConnectionQuery.data.email}` : ''}`
                   : 'Menghubungkan Google Drive'}
             </Text>
           </View>

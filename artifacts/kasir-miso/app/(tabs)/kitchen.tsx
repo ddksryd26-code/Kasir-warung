@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text as NativeText, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActiveOrder, useWarung } from '@/context/WarungContext';
 import { useColors } from '@/hooks/useColors';
-import { useLanguage } from '@/context/LanguageContext';
-import { Pressable, Text } from '@/components/LocalizedPrimitives';
 import { Badge, EmptyState, PageHeader, Screen, SectionHeader, Surface } from '@/components/WarungUI';
 import { OrderComposer } from '@/components/OrderComposer';
 
 export default function KitchenScreen() {
   const c = useColors();
-  const { t } = useLanguage();
   const { menus, consignments, kitchenOrders, activeOrders, inventory, completeKitchen } = useWarung();
   const [addingTo, setAddingTo] = useState<ActiveOrder | null>(null);
   const lowStockCount = inventory.filter((item) => item.qty <= item.safe).length;
@@ -18,7 +15,7 @@ export default function KitchenScreen() {
     item.displayName
     ?? menus.find((menu) => menu.id === item.menu)?.name
     ?? consignments.find((consignment) => `consignment:${consignment.id}` === item.menu)?.name
-    ?? t('Menu dihapus');
+    ?? 'Menu dihapus';
   return (
     <Screen>
       <PageHeader eyebrow="Operasional" title="Dapur & pesanan" subtitle="Catat pesanan, lalu masak dari antrean yang sama." />
@@ -28,16 +25,16 @@ export default function KitchenScreen() {
         onComplete={() => setAddingTo(null)}
         onCancel={() => setAddingTo(null)}
       />
-       <Surface tone="ink" style={s.banner}><View style={[s.bannerIcon, { backgroundColor: c.accent }]}><Ionicons name="flame-outline" size={20} color={c.accentForeground} /></View><View style={s.flex}><Text style={[s.bannerNumber, { color: c.card }]}>{kitchenOrders.length}</Text><Text style={[s.bannerText, { color: c.mutedForeground }]}>pesanan menunggu dimasak</Text></View><Ionicons name="chevron-forward" size={18} color={c.primary} /></Surface>
-       {lowStockCount ? <Surface style={[s.warning, { backgroundColor: c.muted }]}><Ionicons name="warning-outline" size={18} color={c.destructive} /><Text style={[s.warningText, { color: c.foreground }]}>{t('{count} bahan perlu diisi ulang agar pesanan berikutnya tetap lancar.', { count: lowStockCount })}</Text></Surface> : null}
+      <Surface tone="ink" style={s.banner}><View style={[s.bannerIcon, { backgroundColor: c.accent }]}><Ionicons name="flame-outline" size={20} color={c.accentForeground} /></View><View style={s.flex}><Text style={[s.bannerNumber, { color: c.card }]}>{kitchenOrders.length}</Text><Text style={[s.bannerText, { color: c.mutedForeground }]}>pesanan menunggu dimasak</Text></View><Ionicons name="chevron-forward" size={18} color={c.primary} /></Surface>
+      {lowStockCount ? <Surface style={[s.warning, { backgroundColor: c.muted }]}><Ionicons name="warning-outline" size={18} color={c.destructive} /><Text style={[s.warningText, { color: c.foreground }]}>{lowStockCount} bahan perlu diisi ulang agar pesanan berikutnya tetap lancar.</Text></Surface> : null}
       <SectionHeader title="Pesanan masuk" meta="paling baru di bawah" icon="time-outline" />
         {kitchenOrders.map((order) => {
           const parentOrder = activeOrders.find((activeOrder) => activeOrder.id === (order.parentOrderId ?? order.id));
           return <Surface key={order.id} style={s.card}>
-          <View style={s.row}><Badge tone={order.tables.length ? 'accent' : 'muted'}>{order.tables.length ? order.tables.map((table) => `M${table}`).join(' + ') : 'Tanpa meja'}</Badge><NativeText style={[s.time, { color: c.mutedForeground }]}>{order.createdAt}</NativeText></View>
-          {!order.isAdditional ? <Text style={[s.pax, { color: c.foreground }]}>{t('{count} pelanggan', { count: order.pax })}</Text> : <Text style={[s.additionalLabel, { color: c.primary }]}>TAMBAHAN PESANAN</Text>}
-          {order.items.map((item, index) => <View key={`${item.menu}-${index}`} style={s.item}><Text style={[s.qty, { color: c.primary }]}>{item.qty}×</Text><NativeText style={[s.itemName, { color: c.foreground }]}>{itemName(item)}</NativeText></View>)}
-         {order.note ? <NativeText style={[s.note, { color: c.primary }]}><Ionicons name="chatbubble-outline" size={13} />  {order.note}</NativeText> : null}
+         <View style={s.row}><Badge tone={order.tables.length ? 'accent' : 'muted'}>{order.tables.length ? order.tables.map((table) => `M${table}`).join(' + ') : 'Tanpa meja'}</Badge><Text style={[s.time, { color: c.mutedForeground }]}>{order.createdAt}</Text></View>
+         {!order.isAdditional ? <Text style={[s.pax, { color: c.foreground }]}>{order.pax} PELANGGAN</Text> : <Text style={[s.additionalLabel, { color: c.primary }]}>TAMBAHAN PESANAN</Text>}
+         {order.items.map((item, index) => <View key={`${item.menu}-${index}`} style={s.item}><Text style={[s.qty, { color: c.primary }]}>{item.qty}×</Text><Text style={[s.itemName, { color: c.foreground }]}>{itemName(item)}</Text></View>)}
+        {order.note ? <Text style={[s.note, { color: c.primary }]}><Ionicons name="chatbubble-outline" size={13} />  {order.note}</Text> : null}
          <View style={s.cardActions}>
            {parentOrder ? <Pressable onPress={() => setAddingTo(parentOrder)} style={({ pressed }) => [s.addButton, { borderColor: c.border, opacity: pressed ? 0.68 : 1 }]}><Ionicons name="add" size={17} color={c.primary} /><Text style={[s.addText, { color: c.primary }]}>Tambah menu</Text></Pressable> : null}
            <Pressable testID={`done-${order.id}`} onPress={() => completeKitchen(order.id)} style={({ pressed }) => [s.done, { backgroundColor: c.primary, opacity: pressed ? 0.72 : 1 }]}><Ionicons name="checkmark" size={17} color={c.primaryForeground} /><Text style={[s.doneText, { color: c.primaryForeground }]}>Selesai dimasak</Text></Pressable>

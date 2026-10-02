@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import {
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { reloadAppAsync } from 'expo';
-import { Pressable, Text } from '@/components/LocalizedPrimitives';
-import { useLanguage } from '@/context/LanguageContext';
 
 export type ErrorFallbackProps = {
   error: Error;
@@ -21,7 +21,6 @@ export type ErrorFallbackProps = {
 export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -35,9 +34,9 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   };
 
   const formatErrorDetails = (): string => {
-    let details = `${t('Kesalahan')}: ${error.message}\n\n`;
+    let details = `Error: ${error.message}\n\n`;
     if (error.stack) {
-      details += `${t('Jejak tumpukan')}:\n${error.stack}`;
+      details += `Stack Trace:\n${error.stack}`;
     }
     return details;
   };
@@ -53,7 +52,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
       {__DEV__ ? (
         <Pressable
           onPress={() => setIsModalVisible(true)}
-          accessibilityLabel="Lihat detail kesalahan"
+          accessibilityLabel="View error details"
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.topButton,
@@ -70,11 +69,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Terjadi kesalahan
+          Something went wrong
         </Text>
 
         <Text style={[styles.message, { color: colors.mutedForeground }]}>
-          Muat ulang aplikasi untuk melanjutkan.
+          Please reload the app to continue.
         </Text>
 
         <Pressable
@@ -91,7 +90,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           <Text
             style={[styles.buttonText, { color: colors.primaryForeground }]}
           >
-            Coba lagi
+            Try Again
           </Text>
         </Pressable>
       </View>
@@ -117,11 +116,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 ]}
               >
                 <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  Detail kesalahan
+                  Error Details
                 </Text>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
-                  accessibilityLabel="Tutup detail kesalahan"
+                  accessibilityLabel="Close error details"
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.closeButton,

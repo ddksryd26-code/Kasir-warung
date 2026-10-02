@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -8,52 +8,16 @@ import { isActiveSale } from '@/domain/cashClosing';
 import { useColors } from '@/hooks/useColors';
 import { Badge, EmptyState, PageHeader, PrimaryButton, Screen, SectionHeader, Surface } from '@/components/WarungUI';
 import { buildReceiptHtml, buildReceiptText } from '@/utils/receipt';
-import { useLanguage } from '@/context/LanguageContext';
-import { Alert, Pressable, Share, Text, TextInput } from '@/components/LocalizedPrimitives';
 
 const periods: ReportPeriod[] = ['Hari ini', 'Minggu ini', 'Bulan ini'];
 
-function formatHistoryDate(value: string, locale: string) {
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-type Translator = (source: string, values?: Record<string, string | number>) => string;
-
-function localizeReceiptText(source: string, t: Translator) {
-  return source
-    .replace(/^Bukti pembayaran$/m, t('Bukti pembayaran'))
-    .replace(/^Nomor transaksi:/m, t('Nomor transaksi:'))
-    .replace(/^Waktu:/m, t('Waktu:'))
-    .replace(/^Meja:/m, t('Meja:'))
-    .replace(/^TOTAL:/m, t('TOTAL:'))
-    .replace(/^Metode: Tunai$/m, t('Metode: Tunai'))
-    .replace(/^Metode: QRIS$/m, t('Metode: QRIS'))
-    .replace(/^Diterima:/m, t('Diterima:'))
-    .replace(/^Kembalian:/m, t('Kembalian:'))
-    .replace(/^Terima kasih sudah berbelanja\.$/m, t('Terima kasih sudah berbelanja.'))
-    .replace(/^(\d+x )Item dihapus (—)/gm, `$1${t('Item dihapus')} $2`);
-}
-
-function localizeReceiptHtml(source: string, t: Translator) {
-  return source
-    .replaceAll('Bukti pembayaran', t('Bukti pembayaran'))
-    .replaceAll('No. transaksi:', t('No. transaksi:'))
-    .replaceAll('Meja:', t('Meja:'))
-    .replaceAll('TOTAL</span>', `${t('TOTAL')}</span>`)
-    .replaceAll('Metode: Tunai', t('Metode: Tunai'))
-    .replaceAll('Metode: QRIS', t('Metode: QRIS'))
-    .replaceAll('Diterima:', t('Diterima:'))
-    .replaceAll('Kembalian:', t('Kembalian:'))
-    .replaceAll('Terima kasih sudah berbelanja.', t('Terima kasih sudah berbelanja.'))
-    .replace(/(\d+x )Item dihapus( —)/g, `$1${t('Item dihapus')}$2`);
+function formatHistoryDate(value: string) {
+  const parts = value.split('-');
+  return parts.length === 3 ? parts.reverse().join('/') : value;
 }
 
 export default function HistoryScreen() {
   const c = useColors();
-  const { locale, t } = useLanguage();
   const { menus, consignments, sales, auditTrail = [], cashClosures, refundSale } = useWarung();
   const [period, setPeriod] = useState<ReportPeriod>('Hari ini');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -95,17 +59,14 @@ export default function HistoryScreen() {
   };
   const shareSelectedReceipt = async () => {
     if (!selectedSale) return;
-    const message = localizeReceiptText(buildReceiptText(selectedSale, catalogItems), t);
+    const message = buildReceiptText(selectedSale, catalogItems);
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(message);
         Alert.alert('Struk disalin', 'Bukti pembayaran sudah disalin ke clipboard.');
         return;
       }
-      await Share.share({
-        message,
-        title: t('Struk {number}', { number: selectedSale.receiptNumber ?? '' }),
-      });
+      await Share.share({ message, title: `Struk ${selectedSale.receiptNumber ?? ''}` });
     } catch {
       Alert.alert('Bagikan belum tersedia', 'Struk tidak dapat dibagikan dari perangkat ini.');
     }
@@ -118,7 +79,7 @@ export default function HistoryScreen() {
         window.print();
         return;
       }
-       await Print.printAsync({ html: localizeReceiptHtml(buildReceiptHtml(selectedSale, catalogItems), t) });
+      await Print.printAsync({ html: buildReceiptHtml(selectedSale, catalogItems) });
     } catch {
       Alert.alert('Cetak belum tersedia', 'Gunakan tombol bagikan untuk mengirim struk ke aplikasi lain.');
     } finally {
@@ -133,9 +94,9 @@ export default function HistoryScreen() {
         window.print();
         return;
       }
-       const { uri } = await Print.printToFileAsync({ html: localizeReceiptHtml(buildReceiptHtml(selectedSale, catalogItems), t) });
+      const { uri } = await Print.printToFileAsync({ html: buildReceiptHtml(selectedSale, catalogItems) });
       if (await Sharing.isAvailableAsync()) {
-         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: t('Bagikan PDF struk') });
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Bagikan PDF struk' });
       } else {
         Alert.alert('PDF siap', 'Perangkat ini tidak menyediakan menu berbagi untuk file PDF.');
       }
@@ -182,14 +143,14 @@ export default function HistoryScreen() {
           <Text style={[s.summaryLabel, { color: c.mutedForeground }]}>TOTAL PENJUALAN · {period.toUpperCase()}</Text>
           <Text style={[s.summaryValue, { color: c.card }]}>{formatRp(total)}</Text>
         </View>
-        <Badge tone="primary">{t('{count} {unit}', { count: filteredSales.length, unit: filteredSales.length === 1 ? 'receipt' : 'receipts' })}</Badge>
+        <Badge tone="primary">{filteredSales.length} nota</Badge>
       </Surface>
-      <SectionHeader title="Daftar transaksi" meta={filteredSales.length ? t('Terbaru') : undefined} icon="list-outline" />
+      <SectionHeader title="Daftar transaksi" meta={filteredSales.length ? 'Terbaru' : undefined} icon="list-outline" />
       {!filteredSales.length ? (
         <EmptyState
           icon="receipt-outline"
           title="Belum ada transaksi"
-          body={t('Pembayaran pada periode {period} akan muncul di sini.', { period: t(period).toLowerCase() })}
+          body={`Pembayaran pada periode ${period.toLowerCase()} akan muncul di sini.`}
         />
       ) : (
         filteredSales.map((sale) => (
@@ -201,9 +162,9 @@ export default function HistoryScreen() {
                    <Ionicons name={sale.status === 'refunded' ? 'arrow-undo-circle-outline' : 'checkmark-circle-outline'} size={19} color={sale.status === 'refunded' ? c.destructive : c.primary} />
                 </View>
                 <View style={s.flex}>
-                   <Text style={[s.date, { color: c.foreground }]}>{formatHistoryDate(sale.date, locale)}</Text>
+                  <Text style={[s.date, { color: c.foreground }]}>{formatHistoryDate(sale.date)}</Text>
                   <Text style={[s.meta, { color: c.mutedForeground }]}>
-                     {sale.receiptNumber ? `${sale.receiptNumber} · ` : ''}{sale.paidAt ? t('Dibayar {time}', { time: sale.paidAt }) : t('Pembayaran diterima')}
+                    {sale.receiptNumber ? `${sale.receiptNumber} · ` : ''}{sale.paidAt ? `Dibayar ${sale.paidAt}` : 'Pembayaran diterima'}
                   </Text>
                 </View>
               </View>
@@ -212,11 +173,11 @@ export default function HistoryScreen() {
             <View style={[s.divider, { backgroundColor: c.border }]} />
             <View style={s.detailRow}>
               <Text style={[s.items, { color: c.mutedForeground }]}>
-                  {sale.items.map((item) => {
+                 {sale.items.map((item) => {
                     const name = item.displayName ?? (isConsignmentKey(item.menu)
                      ? consignments.find((consignment) => consignment.id === consignmentIdFromKey(item.menu))?.name
                       : menus.find((menu) => menu.id === item.menu)?.name);
-                    return `${name || t('Item dihapus')} ×${item.qty}`;
+                   return `${name || 'Item dihapus'} ×${item.qty}`;
                  }).join(' · ')}
               </Text>
                <View style={s.badgeRow}><Badge tone={sale.method === 'QRIS' ? 'accent' : 'muted'}>{sale.method}</Badge>{sale.status === 'refunded' ? <Badge tone="danger">Refund</Badge> : null}</View>
@@ -236,7 +197,7 @@ export default function HistoryScreen() {
             <View style={s.modalHeader}>
               <View>
                 <Text style={[s.modalKicker, { color: c.primary }]}>DETAIL TRANSAKSI</Text>
-                <NativeText style={[s.modalTitle, { color: c.foreground }]}>{selectedSale?.receiptNumber ?? t('Transaksi lama')}</NativeText>
+                <Text style={[s.modalTitle, { color: c.foreground }]}>{selectedSale?.receiptNumber ?? 'Transaksi lama'}</Text>
               </View>
               <Pressable accessibilityLabel="Tutup detail transaksi" hitSlop={12} onPress={closeDetail}>
                 <Ionicons name="close-circle" size={27} color={c.mutedForeground} />
@@ -244,20 +205,20 @@ export default function HistoryScreen() {
             </View>
             <ScrollView style={s.modalScroll} showsVerticalScrollIndicator={false}>
               <Text style={[s.modalMeta, { color: c.mutedForeground }]}>
-                {selectedSale?.paidAt ? t('Dibayar {time}', { time: selectedSale.paidAt }) : selectedSale ? formatHistoryDate(selectedSale.date, locale) : ''} · {selectedSale?.method}
+                {selectedSale?.paidAt ? `Dibayar ${selectedSale.paidAt}` : selectedSale ? formatHistoryDate(selectedSale.date) : ''} · {selectedSale?.method}
               </Text>
               {selectedSale?.tables?.length ? (
-                <Text style={[s.modalMeta, { color: c.mutedForeground }]}>{t('Meja {tables}', { tables: selectedSale.tables.map((table) => `M${table}`).join(' + ') })}</Text>
+                <Text style={[s.modalMeta, { color: c.mutedForeground }]}>Meja {selectedSale.tables.map((table) => `M${table}`).join(' + ')}</Text>
               ) : null}
               <View style={[s.modalItems, { borderColor: c.border }]}>
                 {selectedSale?.items.map((item, index) => {
                   const name = item.displayName ?? (isConsignmentKey(item.menu)
                     ? consignments.find((consignment) => consignment.id === consignmentIdFromKey(item.menu))?.name
-                    : menus.find((menu) => menu.id === item.menu)?.name) ?? t('Item dihapus');
+                    : menus.find((menu) => menu.id === item.menu)?.name) ?? 'Item dihapus';
                   const unitPrice = item.unitPrice ?? menus.find((menu) => menu.id === item.menu)?.price ?? consignments.find((consignment) => consignmentKey(consignment.id) === item.menu)?.sellPrice ?? 0;
                   return (
                     <View key={`${item.menu}-${index}`} style={s.modalItemRow}>
-                      <View style={s.itemCopy}><NativeText style={[s.modalItemName, { color: c.foreground }]}>{item.qty}× {name}</NativeText><Text style={[s.modalItemMeta, { color: c.mutedForeground }]}>{t('{price} per item', { price: formatRp(unitPrice) })}</Text></View>
+                      <View style={s.itemCopy}><Text style={[s.modalItemName, { color: c.foreground }]}>{item.qty}× {name}</Text><Text style={[s.modalItemMeta, { color: c.mutedForeground }]}>{formatRp(unitPrice)} / item</Text></View>
                       <Text style={[s.modalItemAmount, { color: c.foreground }]}>{formatRp(unitPrice * item.qty)}</Text>
                     </View>
                   );
@@ -302,11 +263,11 @@ export default function HistoryScreen() {
           </View>
         </View>
       </Modal>
-      <SectionHeader title="Audit aktivitas" meta={auditTrail.length ? t('{count} activity records', { count: auditTrail.length }) : undefined} icon="shield-checkmark-outline" />
+      <SectionHeader title="Audit aktivitas" meta={auditTrail.length ? `${auditTrail.length} catatan` : undefined} icon="shield-checkmark-outline" />
       {!auditTrail.length ? <EmptyState icon="shield-checkmark-outline" title="Belum ada aktivitas koreksi" body="Refund dan pembatalan order akan tercatat di sini." /> : auditTrail.slice().reverse().slice(0, 5).map((entry) => (
         <Surface key={entry.id} style={s.auditCard}>
           <View style={[s.auditIcon, { backgroundColor: entry.action === 'sale_refunded' ? c.accent : c.secondary }]}><Ionicons name={entry.action === 'sale_refunded' ? 'arrow-undo-outline' : 'close-circle-outline'} size={17} color={entry.action === 'sale_refunded' ? c.accentForeground : c.primary} /></View>
-          <View style={s.flex}><Text style={[s.auditTitle, { color: c.foreground }]}>{t(entry.action === 'sale_refunded' ? 'Refund transaksi' : 'Order dibatalkan')}</Text><NativeText style={[s.auditDetail, { color: c.mutedForeground }]}>{entry.description}</NativeText><Text style={[s.auditDate, { color: c.mutedForeground }]}>{new Date(entry.date).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text></View>
+          <View style={s.flex}><Text style={[s.auditTitle, { color: c.foreground }]}>{entry.action === 'sale_refunded' ? 'Refund transaksi' : 'Order dibatalkan'}</Text><Text style={[s.auditDetail, { color: c.mutedForeground }]}>{entry.description}</Text><Text style={[s.auditDate, { color: c.mutedForeground }]}>{new Date(entry.date).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text></View>
           {entry.amount !== undefined ? <Text style={[s.auditAmount, { color: c.destructive }]}>−{formatRp(entry.amount)}</Text> : null}
         </Surface>
       ))}

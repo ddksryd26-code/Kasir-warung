@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text as NativeText, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PageHeader, Screen, Surface } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
-import { useLanguage } from '@/context/LanguageContext';
-import { Pressable, Text } from '@/components/LocalizedPrimitives';
 
 type Operator = '+' | '−' | '×' | '÷';
 type CalculatorKey = string;
@@ -25,7 +23,6 @@ const formatNumber = (value: number) => {
 
 export default function CalculatorScreen() {
   const c = useColors();
-  const { t } = useLanguage();
   const [display, setDisplay] = useState('0');
   const [storedValue, setStoredValue] = useState<number | null>(null);
   const [operator, setOperator] = useState<Operator | null>(null);
@@ -119,8 +116,8 @@ export default function CalculatorScreen() {
 
       <Surface style={s.calculator}>
         <View style={[s.displayPanel, { backgroundColor: c.foreground }]}>
-          <Text style={[s.formula, { color: c.primaryForeground + 'B8' }]} numberOfLines={1}>{formula ? formula.replaceAll('Error', t('Error')) : 'Siap menghitung'}</Text>
-          <Text style={[s.display, { color: c.card }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.45}>{display === 'Error' ? t('Error') : display}</Text>
+          <Text style={[s.formula, { color: c.primaryForeground + 'B8' }]} numberOfLines={1}>{formula || 'Siap menghitung'}</Text>
+          <Text style={[s.display, { color: c.card }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.45}>{display}</Text>
         </View>
 
         <View style={s.keyGrid}>
@@ -151,14 +148,13 @@ function calculate(first: number, second: number, operator: Operator) {
 
 function CalculatorButton({ label, onPress }: { label: string; onPress: () => void }) {
   const c = useColors();
-  const { t } = useLanguage();
   const isOperator = ['÷', '×', '−', '+'].includes(label);
   const isAction = ['AC', '±', '%'].includes(label);
   const isEquals = label === '=';
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('Tombol {label}', { label: t(label) })}
+      accessibilityLabel={`Tombol ${label}`}
       onPress={onPress}
       style={({ pressed }) => [
         s.key,

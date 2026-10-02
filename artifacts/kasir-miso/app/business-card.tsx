@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Platform, Pressable, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { PageHeader, PrimaryButton, Screen, Surface, ThemeActions } from '@/components/WarungUI';
 import { useColors } from '@/hooks/useColors';
-import { useLanguage } from '@/context/LanguageContext';
-import { Pressable, Share, Text, TextInput } from '@/components/LocalizedPrimitives';
 
 type DesignId = 'signature' | 'heritage' | 'atelier';
 type BusinessCardData = { design: DesignId; personName: string; businessName: string; businessAddress: string; businessPhone: string; businessEmail: string };
@@ -22,7 +20,6 @@ const designs: { id: DesignId; name: string; detail: string }[] = [
 export default function BusinessCardScreen() {
   const c = useColors();
   const router = useRouter();
-  const { t } = useLanguage();
   const [design, setDesign] = useState<DesignId>('signature');
   const [personName, setPersonName] = useState('Budi Santoso');
   const [businessName, setBusinessName] = useState('Warung Hari Ini');
@@ -62,12 +59,12 @@ export default function BusinessCardScreen() {
     const fg = escapeXml(palette.foreground);
     const accent = escapeXml(palette.accent);
     const soft = escapeXml(palette.foreground + 'C9');
-    const name = escapeXml(personName.trim() || t('Nama pemilik'));
-    const shop = escapeXml(businessName.trim() || t('Nama usaha'));
-    const address = escapeXml(businessAddress.trim() || t('Alamat usaha'));
-    const phone = escapeXml(businessPhone.trim() || t('Nomor telepon'));
-    const email = escapeXml(businessEmail.trim() || t('Alamat email'));
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760"><rect width="1200" height="760" rx="48" fill="${bg}"/><rect x="72" y="72" width="112" height="112" rx="32" fill="${accent}"/><path d="M101 143h54M109 127h38M118 110l20 30" stroke="${escapeXml(palette.accentForeground)}" stroke-width="10" stroke-linecap="round" fill="none"/><text x="224" y="130" fill="${fg}" font-family="Arial, sans-serif" font-size="42" font-weight="700">${shop}</text><text x="224" y="170" fill="${soft}" font-family="Arial, sans-serif" font-size="23">${escapeXml(t('Rasa yang diingat'))}</text><text x="72" y="518" fill="${fg}" font-family="Arial, sans-serif" font-size="54" font-weight="700">${name}</text><g fill="${soft}" font-family="Arial, sans-serif" font-size="23"><circle cx="86" cy="575" r="5" fill="${accent}"/><text x="108" y="583">${address}</text><circle cx="86" cy="626" r="5" fill="${accent}"/><text x="108" y="634">${phone}</text><circle cx="86" cy="677" r="5" fill="${accent}"/><text x="108" y="685">${email}</text></g></svg>`;
+    const name = escapeXml(personName.trim() || 'Nama pemilik');
+    const shop = escapeXml(businessName.trim() || 'Nama usaha');
+    const address = escapeXml(businessAddress.trim() || 'Alamat usaha');
+    const phone = escapeXml(businessPhone.trim() || 'Nomor telepon');
+    const email = escapeXml(businessEmail.trim() || 'Alamat email');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760"><rect width="1200" height="760" rx="48" fill="${bg}"/><rect x="72" y="72" width="112" height="112" rx="32" fill="${accent}"/><path d="M101 143h54M109 127h38M118 110l20 30" stroke="${escapeXml(palette.accentForeground)}" stroke-width="10" stroke-linecap="round" fill="none"/><text x="224" y="130" fill="${fg}" font-family="Arial, sans-serif" font-size="42" font-weight="700">${shop}</text><text x="224" y="170" fill="${soft}" font-family="Arial, sans-serif" font-size="23">Rasa yang diingat</text><text x="72" y="518" fill="${fg}" font-family="Arial, sans-serif" font-size="54" font-weight="700">${name}</text><g fill="${soft}" font-family="Arial, sans-serif" font-size="23"><circle cx="86" cy="575" r="5" fill="${accent}"/><text x="108" y="583">${address}</text><circle cx="86" cy="626" r="5" fill="${accent}"/><text x="108" y="634">${phone}</text><circle cx="86" cy="677" r="5" fill="${accent}"/><text x="108" y="685">${email}</text></g></svg>`;
   };
 
   const saveBusinessCard = async () => {
@@ -154,34 +151,24 @@ export default function BusinessCardScreen() {
               <Ionicons name="restaurant-outline" size={25} color={palette.accentForeground} />
             </View>
             <View style={s.cardBusiness}>
-              <Text numberOfLines={1} style={[s.cardBusinessName, { color: palette.foreground }]}>
-                {businessName.trim() ? <NativeText>{businessName}</NativeText> : 'Nama usaha'}
-              </Text>
+              <Text numberOfLines={1} style={[s.cardBusinessName, { color: palette.foreground }]}>{businessName.trim() || 'Nama usaha'}</Text>
               <Text style={[s.cardTagline, { color: palette.foreground + 'B8' }]}>Rasa yang diingat</Text>
             </View>
           </View>
           <View style={s.cardFooter}>
-            <Text numberOfLines={1} style={[s.cardName, { color: palette.foreground }]}>
-              {personName.trim() ? <NativeText>{personName}</NativeText> : 'Nama pemilik'}
-            </Text>
+            <Text numberOfLines={1} style={[s.cardName, { color: palette.foreground }]}>{personName.trim() || 'Nama pemilik'}</Text>
             <View style={s.contactList}>
               <View style={s.contactLine}>
                 <Ionicons name="location-outline" size={12} color={palette.accent} />
-                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>
-                  {businessAddress.trim() ? <NativeText>{businessAddress}</NativeText> : 'Alamat usaha'}
-                </Text>
+                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>{businessAddress.trim() || 'Alamat usaha'}</Text>
               </View>
               <View style={s.contactLine}>
                 <Ionicons name="call-outline" size={12} color={palette.accent} />
-                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>
-                  {businessPhone.trim() ? <NativeText>{businessPhone}</NativeText> : 'Nomor telepon'}
-                </Text>
+                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>{businessPhone.trim() || 'Nomor telepon'}</Text>
               </View>
               <View style={s.contactLine}>
                 <Ionicons name="mail-outline" size={12} color={palette.accent} />
-                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>
-                  {businessEmail.trim() ? <NativeText>{businessEmail}</NativeText> : 'Alamat email'}
-                </Text>
+                <Text numberOfLines={1} style={[s.cardDetail, { color: palette.foreground + 'C9' }]}>{businessEmail.trim() || 'Alamat email'}</Text>
               </View>
             </View>
           </View>
@@ -200,7 +187,7 @@ export default function BusinessCardScreen() {
       <Text style={[s.label, { color: c.mutedForeground }]}>Alamat email</Text>
       <TextInput value={businessEmail} onChangeText={setBusinessEmail} keyboardType="email-address" autoCapitalize="none" placeholder="Contoh: halo@warung.id" placeholderTextColor={c.mutedForeground} style={[s.input, { borderColor: c.border, color: c.foreground, backgroundColor: c.card }]} />
       <View style={s.buttonStack}>
-        <PrimaryButton testID="save-business-card" onPress={saveBusinessCard} icon="checkmark-circle-outline">{t('Simpan kartu')}</PrimaryButton>
+        <PrimaryButton testID="save-business-card" onPress={saveBusinessCard} icon="checkmark-circle-outline">Simpan kartu</PrimaryButton>
         <Pressable testID="download-business-card" accessibilityRole="button" accessibilityLabel="Unduh kartu bisnis" onPress={downloadBusinessCard} style={({ pressed }) => [s.downloadButton, { backgroundColor: c.secondary, borderColor: c.border, opacity: pressed ? 0.72 : 1 }]}>
           <Ionicons name="download-outline" size={17} color={c.primary} />
           <Text style={[s.downloadButtonText, { color: c.primary }]}>Unduh kartu</Text>

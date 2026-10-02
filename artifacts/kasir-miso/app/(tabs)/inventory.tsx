@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
-import { Image, Modal, StyleSheet, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useWarung } from '@/context/WarungContext';
 import { useColors } from '@/hooks/useColors';
-import { useLanguage } from '@/context/LanguageContext';
-import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
 import { EmptyState, IconButton, PageHeader, PrimaryButton, Screen, SectionHeader, Surface, ThemeActions } from '@/components/WarungUI';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { persistImageAsset } from '@/utils/persistentImage';
 
 type StockSection = 'overview' | 'menus' | 'ingredients' | 'consignments';
 
-function formatStockMovementDate(value: string, locale: string) {
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(locale);
-}
-
 export default function InventoryScreen() {
   const c = useColors();
-  const { t, locale } = useLanguage();
   const { menus, inventory, stockMovements = [], consignments, addMenu, deleteMenu, addInventoryItem, deleteInventoryItem, addStock, removeStock, addConsignment, deleteConsignment, addConsignmentStock, removeConsignmentStock } = useWarung();
   const [section, setSection] = useState<StockSection>('overview');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -101,8 +93,8 @@ export default function InventoryScreen() {
     addStock(restockItemId, quantity, restockReason.trim() || 'Stok masuk');
     resetRestock();
   };
-  const confirmDelete = (id: string, name: string) => Alert.alert(t('Hapus menu?'), t('{name} tidak akan muncul di kasir lagi.', { name }), [{ text: t('Batal'), style: 'cancel' }, { text: t('Hapus'), style: 'destructive', onPress: () => deleteMenu(id) }]);
-  const confirmDeleteStock = (id: string, name: string) => Alert.alert(t('Hapus bahan?'), t('{name} akan dihapus dari daftar bahan baku.', { name }), [{ text: t('Batal'), style: 'cancel' }, { text: t('Hapus'), style: 'destructive', onPress: () => deleteInventoryItem(id) }]);
+  const confirmDelete = (id: string, name: string) => Alert.alert('Hapus menu?', `${name} tidak akan muncul di kasir lagi.`, [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus', style: 'destructive', onPress: () => deleteMenu(id) }]);
+  const confirmDeleteStock = (id: string, name: string) => Alert.alert('Hapus bahan?', `${name} akan dihapus dari daftar bahan baku.`, [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus', style: 'destructive', onPress: () => deleteInventoryItem(id) }]);
   const uploadConsignmentImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85, base64: true });
@@ -127,7 +119,7 @@ export default function InventoryScreen() {
     addConsignment(consignmentName.trim(), cost, sellPrice, quantity, packSize, consignmentImageUri);
     resetConsignment();
   };
-  const confirmDeleteConsignment = (id: string, name: string) => Alert.alert(t('Hapus titipan?'), t('{name} akan dihapus dari daftar titipan.', { name }), [{ text: t('Batal'), style: 'cancel' }, { text: t('Hapus'), style: 'destructive', onPress: () => deleteConsignment(id) }]);
+  const confirmDeleteConsignment = (id: string, name: string) => Alert.alert('Hapus titipan?', `${name} akan dihapus dari daftar titipan.`, [{ text: 'Batal', style: 'cancel' }, { text: 'Hapus', style: 'destructive', onPress: () => deleteConsignment(id) }]);
 
   const getRemainingPortions = (recipe: Record<string, number>) => {
     const ingredients = Object.entries(recipe);
@@ -172,7 +164,7 @@ export default function InventoryScreen() {
         <View>
           <Text style={[s.summaryLabel, { color: c.mutedForeground }]}>{section === 'overview' ? 'TOTAL SEMUA ITEM' : section === 'menus' ? 'MENU AKTIF' : section === 'ingredients' ? 'BAHAN TERSIMPAN' : 'BARANG TITIPAN'}</Text>
           <Text style={[s.summaryValue, { color: c.card }]}>{section === 'overview' ? menus.length + inventory.length + consignments.length : section === 'menus' ? menus.length : section === 'ingredients' ? inventory.length : consignments.length}</Text>
-          <Text style={[s.summarySub, { color: c.mutedForeground }]}>{section === 'overview' ? t('{menuCount} menu  ·  {stockCount} bahan  ·  {consignmentCount} titipan', { menuCount: menus.length, stockCount: inventory.length, consignmentCount: consignments.length }) : section === 'menus' ? 'Menu siap dipilih di dapur' : section === 'ingredients' ? `${lowCount ? t('{count} perlu diisi', { count: lowCount }) : t('Semua stok aman')}` : 'Stok titipan aktif'}</Text>
+          <Text style={[s.summarySub, { color: c.mutedForeground }]}>{section === 'overview' ? `${menus.length} menu  ·  ${inventory.length} bahan  ·  ${consignments.length} titipan` : section === 'menus' ? 'Menu siap dipilih di dapur' : section === 'ingredients' ? `${lowCount ? `${lowCount} perlu diisi` : 'Semua stok aman'}` : 'Stok titipan aktif'}</Text>
         </View>
         <View style={[s.summaryCircle, { backgroundColor: c.accent }]}>
           <Ionicons name={section === 'ingredients' && lowCount ? 'warning-outline' : section === 'overview' ? 'layers-outline' : 'checkmark-circle-outline'} size={25} color={c.accentForeground} />
@@ -184,7 +176,7 @@ export default function InventoryScreen() {
              <Ionicons name="warning-outline" size={19} color={c.destructiveForeground} />
            </View>
            <View style={s.flex}>
-              <Text style={[s.alertTitle, { color: c.foreground }]}>{t('{count} stok perlu diisi', { count: lowCount })}</Text>
+             <Text style={[s.alertTitle, { color: c.foreground }]}>{lowCount} stok perlu diisi</Text>
              <Text style={[s.alertBody, { color: c.mutedForeground }]}>
                {inventory.filter((item) => item.qty <= item.safe).slice(0, 3).map((item) => item.name).join(' · ')}
                {lowCount > 3 ? ' · dan lainnya' : ''}
@@ -195,46 +187,46 @@ export default function InventoryScreen() {
        ) : null}
        {section === 'overview' ? <><SectionHeader title="Akses cepat" meta="Pilih kategori" icon="flash-outline" />
          <View style={s.quickAccessGrid}>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('Buka daftar menu, {count} item', { count: menus.length })} onPress={() => setSection('menus')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
+           <Pressable accessibilityRole="button" accessibilityLabel={`Buka daftar menu, ${menus.length} item`} onPress={() => setSection('menus')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
              <View style={[s.quickAccessIcon, { backgroundColor: c.secondary }]}><Ionicons name="restaurant-outline" size={23} color={c.primary} /></View>
-              <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Daftar menu</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{t('{count} tersimpan', { count: menus.length })}</Text></View>
+             <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Daftar menu</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{menus.length} tersimpan</Text></View>
              <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} style={s.quickAccessChevron} />
            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('Buka bahan baku, {count} item', { count: inventory.length })} onPress={() => setSection('ingredients')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
+           <Pressable accessibilityRole="button" accessibilityLabel={`Buka bahan baku, ${inventory.length} item`} onPress={() => setSection('ingredients')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
              <View style={[s.quickAccessIcon, { backgroundColor: c.accent }]}><Ionicons name="cube-outline" size={23} color={c.accentForeground} /></View>
-              <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Bahan baku</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{t('{count} tersimpan', { count: inventory.length })}</Text></View>
+             <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Bahan baku</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{inventory.length} tersimpan</Text></View>
              <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} style={s.quickAccessChevron} />
            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={t('Buka barang titipan, {count} item', { count: consignments.length })} onPress={() => setSection('consignments')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
+           <Pressable accessibilityRole="button" accessibilityLabel={`Buka barang titipan, ${consignments.length} item`} onPress={() => setSection('consignments')} style={({ pressed }) => [s.quickAccess, s.quickAccessTile, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.78 : 1 }]}>
              <View style={[s.quickAccessIcon, { backgroundColor: c.secondary }]}><Ionicons name="storefront-outline" size={23} color={c.primary} /></View>
-              <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Titipan</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{t('{count} tersimpan', { count: consignments.length })}</Text></View>
+             <View style={s.quickAccessCopy}><Text style={[s.quickAccessTitle, { color: c.foreground }]}>Titipan</Text><Text style={[s.quickAccessMeta, { color: c.mutedForeground }]}>{consignments.length} tersimpan</Text></View>
              <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} style={s.quickAccessChevron} />
            </Pressable>
          </View>
        </> : null}
-        {section === 'menus' ? <><SectionHeader title="Daftar menu" meta={t('{count} item', { count: menus.length })} icon="restaurant-outline" />
+       {section === 'menus' ? <><SectionHeader title="Daftar menu" meta={`${menus.length} item`} icon="restaurant-outline" />
          {!menus.length ? <EmptyState icon="restaurant-outline" title="Belum ada menu" body="Buat daftar menu warung melalui tombol di atas." /> : menus.map((menu) => { const remaining = getRemainingPortions(menu.recipe); return <Surface key={menu.id} style={s.item}><View style={s.inventoryImage}>{menu.imageUri ? <Image source={{ uri: menu.imageUri }} style={s.imageFill} /> : <Ionicons name={menu.category === 'Minuman' ? 'cafe-outline' : 'fast-food-outline'} size={19} color={c.primary} />}</View><View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{menu.name}</Text><Text style={[s.category, { color: c.primary }]}>{menu.category || 'Lainnya'}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>{menu.price.toLocaleString('id-ID')}</Text><Text style={[s.recipe, { color: remaining === 0 ? c.destructive : c.primary }]}>{remaining === null ? 'Sisa belum dihitung — atur resep stok' : `Sisa ${remaining} porsi`}</Text></View><View style={s.itemActions}><IconButton icon="trash-outline" label={`Hapus ${menu.name}`} onPress={() => confirmDelete(menu.id, menu.name)} /></View></Surface>; })}
        </> : null}
         {section === 'ingredients' ? <><Pressable accessibilityRole="button" accessibilityLabel="Catat stok masuk" onPress={() => { setRestockItemId(inventory[0]?.id ?? ''); setRestockOpen(true); }} style={({ pressed }) => [s.stockInButton, { backgroundColor: c.primary, opacity: pressed ? 0.76 : 1 }]}>
           <Ionicons name="download-outline" size={18} color={c.primaryForeground} />
           <View style={s.flex}><Text style={[s.stockInTitle, { color: c.primaryForeground }]}>Catat stok masuk</Text><Text style={[s.stockInBody, { color: c.primaryForeground + 'CC' }]}>Tambahkan jumlah dan simpan sumbernya.</Text></View>
           <Ionicons name="chevron-forward" size={18} color={c.primaryForeground} />
-         </Pressable><SectionHeader title="Bahan baku" meta={lowCount ? t('{count} perlu diisi', { count: lowCount }) : t('{count} item', { count: inventory.length })} icon="cube-outline" />
+        </Pressable><SectionHeader title="Bahan baku" meta={lowCount ? `${lowCount} perlu diisi` : `${inventory.length} item`} icon="cube-outline" />
         {!inventory.length ? <EmptyState icon="cube-outline" title="Belum ada stok" body="Tambahkan bahan baku, satuan, dan batas aman." /> : inventory.map((item) => {
           const low = item.qty <= item.safe;
           return <Surface key={item.id} style={[s.item, { borderColor: low ? c.destructive : c.border }]}>
             <View style={[s.itemIcon, { backgroundColor: low ? c.muted : c.secondary }]}><Ionicons name="cube-outline" size={19} color={low ? c.destructive : c.primary} /></View>
-            <View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{item.name}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>{t('Batas aman {safe} {unit}', { safe: item.safe, unit: item.unit })}</Text></View>
+            <View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{item.name}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>Batas aman {item.safe} {item.unit}</Text></View>
             <View style={s.stockRight}><Text style={[s.stockQty, { color: low ? c.destructive : c.foreground }]}>{item.qty}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>{item.unit}</Text></View>
-            {low ? <View accessibilityLabel={t('Stok {name} menipis', { name: item.name })} style={s.lowIndicator}><Ionicons name="warning" size={19} color={c.destructive} /></View> : null}
+            {low ? <View accessibilityLabel={`Stok ${item.name} menipis`} style={s.lowIndicator}><Ionicons name="warning" size={19} color={c.destructive} /></View> : null}
               <View style={s.stockControls}>
-              <Pressable accessibilityLabel={t('Kurangi stok {name}', { name: item.name })} disabled={item.qty <= 0} onPress={() => removeStock(item.id, 1)} style={({ pressed }) => [s.minus, { backgroundColor: c.secondary, opacity: item.qty <= 0 ? 0.4 : pressed ? 0.65 : 1 }]}><Ionicons name="remove" size={17} color={c.secondaryForeground} /></Pressable>
-              <Pressable accessibilityLabel={t('Tambah stok {name}', { name: item.name })} onPress={() => addStock(item.id, 1)} style={({ pressed }) => [s.plus, { backgroundColor: c.primary, opacity: pressed ? 0.7 : 1 }]}><Ionicons name="add" size={17} color={c.primaryForeground} /></Pressable>
-              <IconButton icon="trash-outline" label={t('Hapus bahan {name}', { name: item.name })} onPress={() => confirmDeleteStock(item.id, item.name)} />
+              <Pressable accessibilityLabel={`Kurangi stok ${item.name}`} disabled={item.qty <= 0} onPress={() => removeStock(item.id, 1)} style={({ pressed }) => [s.minus, { backgroundColor: c.secondary, opacity: item.qty <= 0 ? 0.4 : pressed ? 0.65 : 1 }]}><Ionicons name="remove" size={17} color={c.secondaryForeground} /></Pressable>
+              <Pressable accessibilityLabel={`Tambah stok ${item.name}`} onPress={() => addStock(item.id, 1)} style={({ pressed }) => [s.plus, { backgroundColor: c.primary, opacity: pressed ? 0.7 : 1 }]}><Ionicons name="add" size={17} color={c.primaryForeground} /></Pressable>
+              <IconButton icon="trash-outline" label={`Hapus bahan ${item.name}`} onPress={() => confirmDeleteStock(item.id, item.name)} />
              </View>
           </Surface>;
           })}
-          {stockMovements.length ? <><SectionHeader title="Riwayat stok masuk" meta={t('{count} catatan', { count: stockMovements.length })} icon="time-outline" />{stockMovements.slice().reverse().slice(0, 5).map((movement) => { const item = inventory.find((entry) => entry.id === movement.inventoryId); return <Surface key={movement.id} style={s.movement}><View style={[s.movementIcon, { backgroundColor: c.secondary }]}><Ionicons name="download-outline" size={17} color={c.primary} /></View><View style={s.flex}><Text style={[s.movementTitle, { color: c.foreground }]}>+{movement.quantity} {movement.unit} {item?.name ?? 'Bahan'}</Text><Text style={[s.movementMeta, { color: c.mutedForeground }]}>{movement.reason ?? 'Stok masuk'} · {movement.date.split('-').reverse().join('/')}</Text></View></Surface>; })}</> : null}
+          {stockMovements.length ? <><SectionHeader title="Riwayat stok masuk" meta={`${stockMovements.length} catatan`} icon="time-outline" />{stockMovements.slice().reverse().slice(0, 5).map((movement) => { const item = inventory.find((entry) => entry.id === movement.inventoryId); return <Surface key={movement.id} style={s.movement}><View style={[s.movementIcon, { backgroundColor: c.secondary }]}><Ionicons name="download-outline" size={17} color={c.primary} /></View><View style={s.flex}><Text style={[s.movementTitle, { color: c.foreground }]}>+{movement.quantity} {movement.unit} {item?.name ?? 'Bahan'}</Text><Text style={[s.movementMeta, { color: c.mutedForeground }]}>{movement.reason ?? 'Stok masuk'} · {movement.date.split('-').reverse().join('/')}</Text></View></Surface>; })}</> : null}
           </> : null}
        {section === 'consignments' ? <><SectionHeader title="Barang titipan" meta={`${consignments.length} item`} icon="storefront-outline" />
         {!consignments.length ? <EmptyState icon="storefront-outline" title="Belum ada barang titipan" body="Catat barang milik penitip untuk melihat biaya, harga jual, dan keuntungan." /> : consignments.map((item) => {

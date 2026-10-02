@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,8 +7,6 @@ import { EmptyState, PageHeader, PrimaryButton, Screen, Surface, ThemeActions } 
 import { attendanceStatusColors } from '@/constants/colors';
 import { useColors } from '@/hooks/useColors';
 import { formatRp, localDate } from '@/context/WarungContext';
-import { useLanguage } from '@/context/LanguageContext';
-import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
 
 const STAFF_STORAGE_KEY = 'warung-staff-v1';
 
@@ -27,6 +25,8 @@ const attendanceOptions: Array<{ label: AttendanceStatus; icon: IconName }> = [
   { label: 'Sakit', icon: 'medkit-outline' },
   { label: 'Alpa', icon: 'close-circle-outline' },
 ];
+const weekdayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
 function AttendanceCalendar({
   month,
   monthLabel,
@@ -41,10 +41,6 @@ function AttendanceCalendar({
   onSelectDate: (date: string) => void;
 }) {
   const c = useColors();
-  const { locale, t } = useLanguage();
-  const weekdayLabels = Array.from({ length: 7 }, (_, index) => (
-    new Date(Date.UTC(2021, 0, 4 + index)).toLocaleDateString(locale, { weekday: 'short', timeZone: 'UTC' })
-  ));
   const [year, monthNumber] = month.split('-').map(Number);
   const daysInMonth = new Date(year, monthNumber, 0).getDate();
   const firstDayOffset = (new Date(year, monthNumber - 1, 1).getDay() + 6) % 7;
@@ -79,11 +75,7 @@ function AttendanceCalendar({
             <Pressable
               key={date}
               accessibilityRole="button"
-              accessibilityLabel={t('{day} {month}{status}', {
-                day,
-                month: monthLabel,
-                status: attendanceStatus ? `, ${t(attendanceStatus)}` : '',
-              })}
+              accessibilityLabel={`${day} ${monthLabel}${attendanceStatus ? `, ${attendanceStatus}` : ''}`}
               onPress={() => onSelectDate(date)}
               style={({ pressed }) => [s.calendarDayWrap, { opacity: pressed ? 0.62 : 1 }]}
             >
@@ -128,7 +120,6 @@ function StaffTabButton({
   onPress: () => void;
 }) {
   const c = useColors();
-  const { t } = useLanguage();
   return (
     <Pressable
       accessibilityRole="tab"
@@ -155,7 +146,7 @@ function AttendanceButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('Tandai {status}', { status: t(status.label) })}
+      accessibilityLabel={`Tandai ${status.label}`}
       onPress={onPress}
       style={({ pressed }) => [
         s.attendanceButton,
@@ -177,7 +168,6 @@ function AttendanceButton({
 export default function StaffScreen() {
   const c = useColors();
   const router = useRouter();
-  const { locale, t } = useLanguage();
   const [store, setStore] = useState<StaffStore>(emptyStore);
   const [hydrated, setHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<StaffTab>('employees');
@@ -191,7 +181,7 @@ export default function StaffScreen() {
 
   const today = localDate();
   const currentMonth = today.slice(0, 7);
-  const monthLabel = new Date(`${currentMonth}-01T00:00:00`).toLocaleDateString(locale, {
+  const monthLabel = new Date(`${currentMonth}-01T00:00:00`).toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
   });
@@ -286,14 +276,11 @@ export default function StaffScreen() {
     };
     setStore((current) => ({ ...current, employees: [...current.employees, newEmployee] }));
     resetEmployeeForm();
-      setStatus(t('{name} berhasil ditambahkan.', { name: newEmployee.name }));
+    setStatus(`${newEmployee.name} berhasil ditambahkan.`);
   };
 
   const deleteEmployee = (employee: Employee) => {
-    Alert.alert(
-      t('Hapus karyawan?'),
-      t('{name} dan catatan terkait akan dihapus dari perangkat.', { name: employee.name }),
-      [
+    Alert.alert('Hapus karyawan?', `${employee.name} dan catatan terkait akan dihapus dari perangkat.`, [
       { text: 'Batal', style: 'cancel' },
       {
         text: 'Hapus',
@@ -304,11 +291,10 @@ export default function StaffScreen() {
             attendance: current.attendance.filter((item) => item.employeeId !== employee.id),
             payments: current.payments.filter((item) => item.employeeId !== employee.id),
           }));
-           setStatus(t('{name} sudah dihapus.', { name: employee.name }));
+          setStatus(`${employee.name} sudah dihapus.`);
         },
       },
-      ],
-    );
+    ]);
   };
 
   const setAttendance = (employeeId: string, nextStatus: AttendanceStatus, date = selectedDate) => {
@@ -319,32 +305,23 @@ export default function StaffScreen() {
         : [...current.attendance, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, employeeId, date, status: nextStatus }];
       return { ...current, attendance: nextAttendance };
     });
-    setStatus(t('Absensi {date} berhasil diperbarui.', { date }));
+    setStatus(`Absensi ${date} berhasil diperbarui.`);
   };
 
   const paySalary = (employee: Employee) => {
     const presentDays = presentDaysByEmployee[employee.id] ?? 0;
     const monthlyAmount = employee.dailyWage * presentDays;
     if (store.payments.some((payment) => payment.employeeId === employee.id && payment.month === currentMonth)) {
-      setStatus(t('Gaji {name} bulan ini sudah ditandai dibayar.', { name: employee.name }));
+      setStatus(`Gaji ${employee.name} bulan ini sudah ditandai dibayar.`);
       return;
     }
     if (presentDays === 0) {
-      setStatus(t('{name} belum memiliki absensi {status} pada bulan ini.', {
-        name: employee.name,
-        status: t('Hadir'),
-      }));
+      setStatus(`${employee.name} belum memiliki absensi Hadir pada bulan ini.`);
       return;
     }
     Alert.alert(
-      t('Tandai gaji sudah dibayar?'),
-      t('{name} · {days} hari × {wage} = {monthly} untuk {month}.', {
-        name: employee.name,
-        days: presentDays,
-        wage: formatRp(employee.dailyWage),
-        monthly: formatRp(monthlyAmount),
-        month: monthLabel,
-      }),
+      'Tandai gaji sudah dibayar?',
+      `${employee.name} · ${presentDays} hari × ${formatRp(employee.dailyWage)} = ${formatRp(monthlyAmount)} untuk ${monthLabel}.`,
       [
       { text: 'Batal', style: 'cancel' },
       {
@@ -357,14 +334,14 @@ export default function StaffScreen() {
               { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, employeeId: employee.id, month: currentMonth, amount: monthlyAmount, paidAt: new Date().toISOString() },
             ],
           }));
-           setStatus(t('Gaji {name} berhasil dicatat.', { name: employee.name }));
+          setStatus(`Gaji ${employee.name} berhasil dicatat.`);
         },
       },
       ],
     );
   };
 
-  const formatSelectedDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(locale, {
+  const formatSelectedDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -447,13 +424,13 @@ export default function StaffScreen() {
                     <Ionicons name="person-outline" size={21} color={c.primary} />
                   </View>
                   <View style={s.employeeCopy}>
-                    <Text style={[s.employeeName, { color: c.foreground }]}><NativeText>{employee.name}</NativeText></Text>
-                    <Text style={[s.employeeRole, { color: c.mutedForeground }]}><NativeText>{employee.role}</NativeText></Text>
+                    <Text style={[s.employeeName, { color: c.foreground }]}>{employee.name}</Text>
+                    <Text style={[s.employeeRole, { color: c.mutedForeground }]}>{employee.role}</Text>
                     <Text style={[s.employeeSalary, { color: c.primary }]}>{formatRp(employee.dailyWage)} / hari</Text>
                   </View>
                   <Pressable
                     testID={`delete-employee-${employee.id}`}
-                      accessibilityLabel={t('Hapus {name}', { name: employee.name })}
+                    accessibilityLabel={`Hapus ${employee.name}`}
                     hitSlop={10}
                     onPress={() => deleteEmployee(employee)}
                   >
@@ -482,7 +459,7 @@ export default function StaffScreen() {
                     <Pressable
                       key={employee.id}
                       accessibilityRole="button"
-                      accessibilityLabel={t('Pilih {name}', { name: employee.name })}
+                      accessibilityLabel={`Pilih ${employee.name}`}
                       onPress={() => setSelectedEmployeeId(employee.id)}
                       style={({ pressed }) => [
                         s.employeeChip,
@@ -494,7 +471,7 @@ export default function StaffScreen() {
                       ]}
                     >
                       <Ionicons name="person-outline" size={14} color={selected ? c.primaryForeground : c.primary} />
-                      <Text style={[s.employeeChipText, { color: selected ? c.primaryForeground : c.foreground }]}><NativeText>{employee.name}</NativeText></Text>
+                      <Text style={[s.employeeChipText, { color: selected ? c.primaryForeground : c.foreground }]}>{employee.name}</Text>
                     </Pressable>
                   );
                 })}
@@ -555,18 +532,15 @@ export default function StaffScreen() {
                       <Ionicons name="wallet-outline" size={20} color={c.primary} />
                     </View>
                     <View style={s.employeeCopy}>
-                       <Text style={[s.employeeName, { color: c.foreground }]}><NativeText>{employee.name}</NativeText></Text>
-                       <Text style={[s.employeeRole, { color: c.mutedForeground }]}><NativeText>{employee.role}</NativeText>
+                      <Text style={[s.employeeName, { color: c.foreground }]}>{employee.name}</Text>
+                      <Text style={[s.employeeRole, { color: c.mutedForeground }]}>{employee.role}</Text>
                       <Text style={[s.employeeSalary, { color: c.foreground }]}>{formatRp(monthlyAmount)} · {presentDays} hari Hadir</Text>
                       <Text style={[s.employeeRole, { color: c.mutedForeground }]}>{formatRp(employee.dailyWage)} / hari</Text>
                     </View>
                     <Pressable
                       testID={`pay-salary-${employee.id}`}
                       accessibilityRole="button"
-                      accessibilityLabel={t('{action} {name}', {
-                        action: t(isPaid ? 'Gaji sudah dibayar' : 'Bayar gaji'),
-                        name: employee.name,
-                      })}
+                      accessibilityLabel={`${isPaid ? 'Gaji sudah dibayar' : 'Bayar gaji'} ${employee.name}`}
                       disabled={isPaid}
                       onPress={() => paySalary(employee)}
                       style={({ pressed }) => [
