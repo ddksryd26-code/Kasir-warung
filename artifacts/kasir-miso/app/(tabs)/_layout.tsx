@@ -6,7 +6,6 @@ import {
   PanResponder,
   Platform,
   StyleSheet,
-  Text,
   useWindowDimensions,
   useColorScheme,
   View,
@@ -16,6 +15,8 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Tabs, usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text } from '@/components/LocalizedPrimitives';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TAB_ROUTES = ['/', '/kitchen', '/notes', '/calculator', '/other'] as const;
 
@@ -33,6 +34,7 @@ function getTabIndex(pathname: string) {
 
 function ClassicTabLayout() {
   const colors = useColors();
+  const { t } = useLanguage();
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const isDark = colorScheme === 'dark';
@@ -200,32 +202,32 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Kasir',
-            tabBarLabel: tabLabel('Kasir'),
+            title: t('Kasir'),
+            tabBarLabel: tabLabel(t('Kasir')),
             tabBarIcon: cashierIcon,
           }}
         />
         <Tabs.Screen
           name="kitchen"
           options={{
-            title: 'Dapur',
-            tabBarLabel: tabLabel('Dapur'),
+            title: t('Dapur'),
+            tabBarLabel: tabLabel(t('Dapur')),
             tabBarIcon: tabIcon('clock'),
           }}
         />
         <Tabs.Screen
           name="notes"
           options={{
-            title: 'Catatan',
-            tabBarLabel: tabLabel('Catatan'),
+            title: t('Catatan'),
+            tabBarLabel: tabLabel(t('Catatan')),
             tabBarIcon: tabIcon('edit-3'),
           }}
         />
         <Tabs.Screen
           name="calculator"
           options={{
-            title: 'Kalkulator',
-            tabBarLabel: tabLabel('Hitung'),
+            title: t('Kalkulator'),
+            tabBarLabel: tabLabel(t('Hitung')),
             tabBarIcon: tabIcon('grid'),
           }}
         />
@@ -236,8 +238,8 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="other"
           options={{
-            title: 'Lainnya',
-            tabBarLabel: tabLabel('Lainnya'),
+            title: t('Lainnya'),
+            tabBarLabel: tabLabel(t('Lainnya')),
             tabBarIcon: tabIcon('more-horizontal'),
           }}
         />

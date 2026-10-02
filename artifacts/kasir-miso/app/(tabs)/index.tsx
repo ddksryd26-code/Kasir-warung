@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Image, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Platform, ScrollView, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Alert, Pressable, Share, Text } from '@/components/LocalizedPrimitives';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,6 +10,7 @@ import { themeOptions } from '@/constants/colors';
 import { consignmentKey, formatRp, getOrderItems, localDate, orderTotal, useWarung } from '@/context/WarungContext';
 import { useColors } from '@/hooks/useColors';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'expo-router';
 import { Badge, EmptyState, IconButton, PageHeader, PrimaryButton, Screen, SectionHeader, Surface, ui } from '@/components/WarungUI';
 import { OrderComposer } from '@/components/OrderComposer';
@@ -27,9 +29,56 @@ type Receipt = {
   tables: number[];
 };
 
+type Translate = (source: string, values?: Record<string, string | number>) => string;
+
+function formatQuantity(count: number, singular: string, plural: string, t: Translate) {
+  return count === 1 ? t(singular) : t(plural, { count });
+}
+
+function localizeReceiptText(source: string, language: 'id' | 'en', t: Translate) {
+  if (language === 'id') return source;
+
+  return source.split('\n').map((line) => {
+    if (line === 'Bukti pembayaran') return t(line);
+    if (line === 'Terima kasih sudah berbelanja.') return t(line);
+    if (line.startsWith('Nomor transaksi: ')) return `${t('Nomor transaksi:')} ${line.slice('Nomor transaksi: '.length)}`;
+    if (line.startsWith('Waktu: ')) return `${t('Waktu:')} ${line.slice('Waktu: '.length)}`;
+    if (line.startsWith('Meja: ')) return `${t('Meja:')} ${line.slice('Meja: '.length)}`;
+    if (line.startsWith('TOTAL: ')) return `${t('TOTAL:')} ${line.slice('TOTAL: '.length)}`;
+    if (line.startsWith('Metode: ')) {
+      const method = line.slice('Metode: '.length);
+      return `${t('Metode:')} ${t(method)}`;
+    }
+    if (line.startsWith('Diterima: ')) return `${t('Diterima:')} ${line.slice('Diterima: '.length)}`;
+    if (line.startsWith('Kembalian: ')) return `${t('Kembalian:')} ${line.slice('Kembalian: '.length)}`;
+    return line;
+  }).join('\n');
+}
+
+function localizeReceiptHtml(source: string, receipt: Receipt, language: 'id' | 'en', t: Translate) {
+  if (language === 'id') return source;
+
+  return source
+    .replace(
+      '<div class="center muted">Bukti pembayaran</div>',
+      `<div class="center muted">${t('Bukti pembayaran')}</div>`,
+    )
+    .replace('<div>No. transaksi:', `<div>${t('No. transaksi:')}`)
+    .replace('<div>Meja:', `<div>${t('Meja:')}`)
+    .replace('<span>TOTAL</span>', `<span>${t('TOTAL')}</span>`)
+    .replace(
+      `<div>Metode: ${receipt.method}</div>`,
+      `<div>${t('Metode:')} ${t(receipt.method)}</div>`,
+    )
+    .replace('<div>Diterima:', `<div>${t('Diterima:')}`)
+    .replace('<div>Kembalian:', `<div>${t('Kembalian:')}`)
+    .replace('Terima kasih sudah berbelanja.', t('Terima kasih sudah berbelanja.'));
+}
+
 export default function CashierScreen() {
   const c = useColors();
   const router = useRouter();
+  const { language, locale, t } = useLanguage();
   const { mode, themeId, selectTheme, toggleMode } = useTheme();
   const { menus, consignments, activeOrders, updateOrderTables, payOrder, cancelOrder, mergeOrders, qrisImageUri, setQrisImageUri } = useWarung();
   const [tables, setTables] = useState<number[]>([]);
@@ -73,7 +122,7 @@ export default function CashierScreen() {
     const total = orderTotal(active, menus, consignments);
     const received = method === 'QRIS' ? total : receivedCash;
     const receiptNumber = `TRX-${localDate().replace(/-/g, '')}-${Date.now().toString().slice(-6)}`;
-    const paidAt = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    const paidAt = new Date().toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
     payOrder(active.id, total, method, receiptNumber, received, Math.max(0, received - total));
     setReceipt({
       receiptNumber,
@@ -88,7 +137,9 @@ export default function CashierScreen() {
     setQr(false);
     setPaying(null);
   };
-  const receiptText = receipt ? buildReceiptText(receipt, catalogItems) : '';
+  const receiptText = receipt
+    ? localizeReceiptText(buildReceiptText(receipt, catalogItems), language, t)
+    : '';
   const shareReceipt = async () => {
     if (!receiptText) return;
     try {
@@ -97,7 +148,10 @@ export default function CashierScreen() {
         Alert.alert('Struk disalin', 'Bukti pembayaran sudah disalin ke clipboard.');
         return;
       }
-      await Share.share({ message: receiptText, title: `Struk ${receipt?.receiptNumber ?? ''}` });
+      await Share.share({
+        message: receiptText,
+        title: t('Struk {receiptNumber}', { receiptNumber: receipt?.receiptNumber ?? '' }),
+      });
     } catch {
       Alert.alert('Struk belum terbagi', 'Coba tekan tombol bagikan lagi.');
     }
@@ -110,7 +164,9 @@ export default function CashierScreen() {
         window.print();
         return;
       }
-      await Print.printAsync({ html: buildReceiptHtml(receipt, catalogItems) });
+      await Print.printAsync({
+        html: localizeReceiptHtml(buildReceiptHtml(receipt, catalogItems), receipt, language, t),
+      });
     } catch {
       Alert.alert('Cetak belum tersedia', 'Gunakan tombol bagikan untuk mengirim struk ke aplikasi lain.');
     } finally {
@@ -125,9 +181,11 @@ export default function CashierScreen() {
         window.print();
         return;
       }
-      const { uri } = await Print.printToFileAsync({ html: buildReceiptHtml(receipt, catalogItems) });
+      const { uri } = await Print.printToFileAsync({
+        html: localizeReceiptHtml(buildReceiptHtml(receipt, catalogItems), receipt, language, t),
+      });
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Bagikan PDF struk' });
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: t('Bagikan PDF struk') });
       } else {
         Alert.alert('PDF siap', 'Perangkat ini tidak menyediakan menu berbagi untuk file PDF.');
       }
@@ -141,10 +199,10 @@ export default function CashierScreen() {
   const confirmCancel = (id: string, tablesForOrder: number[]) => {
     const tableLabel = tablesForOrder.length
       ? tablesForOrder.map((table) => `M${table}`).join(' + ')
-      : 'tanpa meja';
-    const message = `Pesanan ${tableLabel} akan dihapus dan stoknya dikembalikan.`;
+      : t('tanpa meja');
+    const message = t('Pesanan {tableLabel} akan dihapus dan stoknya dikembalikan.', { tableLabel });
     if (Platform.OS === 'web') {
-      if (window.confirm(`Batalkan pesanan?\n\n${message}`)) cancelOrder(id);
+      if (window.confirm(`${t('Batalkan pesanan?')}\n\n${message}`)) cancelOrder(id);
       return;
     }
     Alert.alert(
@@ -267,32 +325,34 @@ export default function CashierScreen() {
 
        <SectionHeader title="Menu aplikasi" meta="Alternatif" icon="apps-outline" />
        <View style={s.quickActions}>
-         {[
-           { label: 'Stok', icon: 'cube-outline' as const, route: '/inventory' as const },
-           { label: 'Biaya', icon: 'wallet-outline' as const, route: '/expenses' as const },
-           { label: 'Laporan', icon: 'bar-chart-outline' as const, route: '/reports' as const },
-           { label: 'Riwayat', icon: 'time-outline' as const, route: '/history' as const },
+          {[
+            { label: 'Stok', icon: 'cube-outline' as const, route: '/inventory' as const },
+            { label: 'Biaya', icon: 'wallet-outline' as const, route: '/expenses' as const },
+            { label: 'Laporan', icon: 'bar-chart-outline' as const, route: '/reports' as const },
+            { label: 'Riwayat', icon: 'time-outline' as const, route: '/history' as const },
          ].map((action) => (
-           <Pressable key={action.label} accessibilityRole="button" accessibilityLabel={`Buka ${action.label}`} onPress={() => router.push(action.route)} style={({ pressed }) => [s.quickAction, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.7 : 1 }]}>
+            <Pressable key={action.label} accessibilityRole="button" accessibilityLabel={t('Buka {label}', { label: t(action.label) })} onPress={() => router.push(action.route)} style={({ pressed }) => [s.quickAction, { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.7 : 1 }]}>
              <View style={[s.quickActionIcon, { backgroundColor: c.secondary }]}><Ionicons name={action.icon} size={18} color={c.primary} /></View>
              <Text style={[s.quickActionLabel, { color: c.foreground }]}>{action.label}</Text>
            </Pressable>
          ))}
        </View>
 
-       <SectionHeader title="Antrean meja aktif" meta={`${activeOrders.length} meja`} icon="receipt-outline" />
+        <SectionHeader title="Antrean meja aktif" meta={language === 'en'
+          ? activeOrders.length === 1 ? t('1 table') : t('{count} tables', { count: activeOrders.length })
+          : t('{count} meja', { count: activeOrders.length })} icon="receipt-outline" />
         {mergingOrderId ? <Pressable onPress={() => setMergingOrderId(null)} style={[s.mergeNotice, { backgroundColor: c.secondary }]}><Ionicons name="git-merge-outline" size={17} color={c.primary} /><Text style={[s.mergeNoticeText, { color: c.foreground }]}>Pilih pesanan meja lain untuk digabung. Tekan di sini untuk batal.</Text></Pressable> : null}
         {activeOrders.map((order) => {
           const orderItems = getOrderItems(order);
           return <Surface key={order.id} style={s.orderCard}>
-         <View style={s.orderHeader}><Badge tone={order.tables.length ? 'accent' : 'muted'}>{order.tables.length ? order.tables.map((table) => `M${table}`).join(' + ') : 'Tanpa meja'}</Badge><Text style={[s.time, { color: c.mutedForeground }]}>{order.createdAt}</Text></View>
-           <Text style={[s.orderPax, { color: c.foreground }]}>{order.pax} pelanggan <Text style={{ color: c.mutedForeground, fontWeight: '500' }}>· {orderItems.reduce((sum, item) => sum + item.qty, 0)} item</Text></Text>
+          <View style={s.orderHeader}><Badge tone={order.tables.length ? 'accent' : 'muted'}>{order.tables.length ? order.tables.map((table) => `M${table}`).join(' + ') : 'Tanpa meja'}</Badge><NativeText style={[s.time, { color: c.mutedForeground }]}>{order.createdAt}</NativeText></View>
+            <Text style={[s.orderPax, { color: c.foreground }]}>{formatQuantity(order.pax, '1 pelanggan', '{count} pelanggan', t)} <Text style={{ color: c.mutedForeground, fontWeight: '500' }}>{formatQuantity(orderItems.reduce((sum, item) => sum + item.qty, 0), '· 1 item', '· {count} item', t)}</Text></Text>
          <Text style={[s.cookedStatus, { color: order.cooked ? c.primary : c.mutedForeground }]}><Ionicons name={order.cooked ? 'checkmark-circle' : 'time-outline'} size={13} />  {order.cooked ? 'Sudah dimasak — siap dibayar' : 'Menunggu pesanan selesai dimasak'}</Text>
          <View style={s.orderDetails}>
            <View style={s.detailHeader}><Text style={[s.detailMenu, s.detailHeaderText, { color: c.mutedForeground }]}>MENU</Text><Text style={[s.detailUnit, s.detailHeaderText, { color: c.mutedForeground }]}>HARGA</Text><Text style={[s.detailSubtotal, s.detailHeaderText, { color: c.mutedForeground }]}>TOTAL</Text></View>
-             {orderItems.map((item, index) => { const catalogItem = catalogItems.find((entry) => entry.id === item.menu); const unitPrice = catalogItem?.price ?? 0; return <View key={`${item.menu}-${index}`} style={s.detailRow}><Text style={[s.detailMenu, { color: c.foreground }]}>{item.qty}× {catalogItem?.name || 'Item dihapus'}</Text><Text style={[s.detailUnit, { color: c.mutedForeground }]}>{formatRp(unitPrice)}</Text><Text style={[s.detailSubtotal, { color: c.foreground }]}>{formatRp(unitPrice * item.qty)}</Text></View>; })}
+              {orderItems.map((item, index) => { const catalogItem = catalogItems.find((entry) => entry.id === item.menu); const unitPrice = catalogItem?.price ?? 0; return <View key={`${item.menu}-${index}`} style={s.detailRow}><NativeText style={[s.detailMenu, { color: c.foreground }]}>{item.qty}× {catalogItem?.name ?? t('Item dihapus')}</NativeText><Text style={[s.detailUnit, { color: c.mutedForeground }]}>{formatRp(unitPrice)}</Text><Text style={[s.detailSubtotal, { color: c.foreground }]}>{formatRp(unitPrice * item.qty)}</Text></View>; })}
          </View>
-        {order.note ? <Text style={[s.note, { color: c.primary }]}><Ionicons name="chatbubble-ellipses-outline" size={13} />  {order.note}</Text> : null}
+         {order.note ? <NativeText style={[s.note, { color: c.primary }]}><Ionicons name="chatbubble-ellipses-outline" size={13} />  {order.note}</NativeText> : null}
          <View style={s.orderActions}>
            <Pressable
              onPress={() => { setTables(order.tables); setAssigningTableTo(order.id); }}
@@ -313,7 +373,7 @@ export default function CashierScreen() {
            {order.cooked ? (
              <Pressable
                testID={`add-order-${order.id}`}
-               accessibilityLabel={`Tambah pesanan ${order.tables.length ? order.tables.map((table) => `M${table}`).join(' dan ') : 'tanpa meja'}`}
+                accessibilityLabel={t('Tambah pesanan {tableLabel}', { tableLabel: order.tables.length ? order.tables.map((table) => `M${table}`).join(` ${t('dan')} `) : t('tanpa meja') })}
                onPress={() => setAddingTo(order)}
                style={({ pressed }) => [s.addOrderButton, { borderColor: c.primary, backgroundColor: addingTo?.id === order.id ? c.primary : c.card, opacity: pressed ? 0.7 : 1 }]}
              >
@@ -327,12 +387,12 @@ export default function CashierScreen() {
              style={({ pressed }) => [s.payButton, { backgroundColor: order.cooked ? c.foreground : c.muted, opacity: order.cooked ? (pressed ? 0.75 : 1) : 0.65 }]}
            >
              <Text style={[s.payText, { color: order.cooked ? c.card : c.mutedForeground }]}>
-               {order.cooked ? `Bayar ${formatRp(orderTotal(order, menus, consignments))}` : 'Belum matang'}
+                {order.cooked ? t('Bayar {amount}', { amount: formatRp(orderTotal(order, menus, consignments)) }) : 'Belum matang'}
              </Text>
            </Pressable>
            <Pressable
              disabled={order.cooked}
-             accessibilityLabel={`Batalkan pesanan ${order.tables.length ? order.tables.map((table) => `M${table}`).join(' dan ') : 'tanpa meja'}`}
+              accessibilityLabel={t('Batalkan pesanan {tableLabel}', { tableLabel: order.tables.length ? order.tables.map((table) => `M${table}`).join(` ${t('dan')} `) : t('tanpa meja') })}
              onPress={() => confirmCancel(order.id, order.tables)}
              style={({ pressed }) => [s.cancelButton, { borderColor: order.cooked ? c.border : c.destructive, opacity: order.cooked ? 0.45 : (pressed ? 0.65 : 1) }]}
            >

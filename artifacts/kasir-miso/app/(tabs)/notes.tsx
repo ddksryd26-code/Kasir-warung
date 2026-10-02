@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text as NativeText, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { EmptyState, PageHeader, Screen, Surface } from '@/components/WarungUI';
 import { formatRp, useWarung } from '@/context/WarungContext';
@@ -7,6 +7,8 @@ import { NoteCategory, NoteItem, ShoppingDay, useNotes } from '@/context/NotesCo
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { useLanguage } from '@/context/LanguageContext';
+import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
 
 const categoryOptions: Array<{ id: NoteCategory; label: string; icon: React.ComponentProps<typeof Ionicons>['name']; helper: string }> = [
   { id: 'shopping', label: 'Belanja', icon: 'cart-outline', helper: 'Atur kebutuhan belanja hari ini dan besok.' },
@@ -17,6 +19,7 @@ const unitOptions = ['pcs', 'kg', 'liter', 'pack'];
 
 export default function NotesScreen() {
   const c = useColors();
+  const { t } = useLanguage();
   const { addShoppingExpense } = useWarung();
   const { notes, addNote, addShoppingItem, toggleNote, toggleShoppingItem, deleteNote, deleteShoppingItem, setShoppingPrice, markShoppingExpenseRecorded, changeShoppingQuantity, clearShoppingCompleted, clearCompleted } = useNotes();
   const [selected, setSelected] = useState<NoteCategory>('shopping');
@@ -84,7 +87,7 @@ export default function NotesScreen() {
           <Pressable
             testID="add-note-fab"
             accessibilityRole="button"
-            accessibilityLabel={`Tulis ${option.label.toLowerCase()} baru`}
+          accessibilityLabel={t('Tulis {category} baru', { category: t(option.label).toLowerCase() })}
             onPress={openComposer}
             style={({ pressed }) => [s.fab, { backgroundColor: c.primary, opacity: pressed ? 0.78 : 1 }]}
           >
@@ -117,7 +120,7 @@ export default function NotesScreen() {
               ]}
             >
               <Ionicons name={item.icon} size={17} color={active ? c.primaryForeground : c.mutedForeground} />
-              <Text style={[s.categoryTabText, { color: active ? c.primaryForeground : c.mutedForeground }]}>{item.label}</Text>
+              <Text style={[s.categoryTabText, { color: active ? c.primaryForeground : c.mutedForeground }]}>{t(item.label)}</Text>
             </Pressable>
           );
         })}
@@ -149,7 +152,7 @@ export default function NotesScreen() {
             <Ionicons name="mail-open-outline" size={18} color={c.primary} />
             <Text style={[s.sectionTitle, { color: c.foreground }]}>{option.label}</Text>
           </View>
-          <Text style={[s.sectionHelper, { color: c.mutedForeground }]}>{option.helper}</Text>
+          <Text style={[s.sectionHelper, { color: c.mutedForeground }]}>{t(option.helper)}</Text>
         </View>
         {completedCount > 0 ? (
           <Pressable
@@ -172,14 +175,14 @@ export default function NotesScreen() {
       ) : (
         <EmptyState
           icon={option.icon}
-          title={selected === 'carry' ? 'Belum ada barang bawaan' : 'Belum ada catatan'}
-          body="Tekan tombol tambah di kanan bawah untuk menulis catatan."
+          title={selected === 'carry' ? t('Belum ada barang bawaan') : t('Belum ada catatan')}
+          body={t('Tekan tombol tambah di kanan bawah untuk menulis catatan.')}
         />
       )}
 
       {completedNotes.length ? (
         <View style={s.completedSection}>
-          <Text style={[s.completedLabel, { color: c.mutedForeground }]}>SUDAH SELESAI · {completedNotes.length}</Text>
+          <Text style={[s.completedLabel, { color: c.mutedForeground }]}>{t('SUDAH SELESAI · {count}', { count: completedNotes.length })}</Text>
           {completedNotes.map((item) => (
             <NoteRow key={item.id} item={item} category={selected} onToggle={toggleNote} onDelete={deleteNote} onOpen={() => setOpenedNote({ item, category: selected })} />
           ))}
@@ -229,6 +232,7 @@ function NoteComposerModal({
   onSubmit: () => void;
 }) {
   const c = useColors();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const canSubmit = Boolean(subject.trim() || body.trim());
   return (
@@ -268,7 +272,7 @@ function NoteComposerModal({
               </View>
               <View style={s.composeMetaCopy}>
                 <Text style={[s.composeMetaLabel, { color: c.mutedForeground }]}>Simpan di</Text>
-                <Text style={[s.composeMetaValue, { color: c.foreground }]}>{category === 'general' ? 'Catatan biasa' : 'Perlu dibawa'}</Text>
+              <Text style={[s.composeMetaValue, { color: c.foreground }]}>{t(category === 'general' ? 'Catatan biasa' : 'Perlu dibawa')}</Text>
               </View>
             </View>
             <View style={[s.categoryPicker, { borderTopColor: c.border }]}>
@@ -283,7 +287,7 @@ function NoteComposerModal({
                     style={({ pressed }) => [s.categoryChip, { backgroundColor: active ? c.primary : c.secondary, opacity: pressed ? 0.72 : 1 }]}
                   >
                     <Ionicons name={item === 'general' ? 'create-outline' : 'bag-handle-outline'} size={14} color={active ? c.primaryForeground : c.secondaryForeground} />
-                    <Text style={[s.categoryChipText, { color: active ? c.primaryForeground : c.secondaryForeground }]}>{item === 'general' ? 'Catatan biasa' : 'Perlu dibawa'}</Text>
+                    <Text style={[s.categoryChipText, { color: active ? c.primaryForeground : c.secondaryForeground }]}>{t(item === 'general' ? 'Catatan biasa' : 'Perlu dibawa')}</Text>
                   </Pressable>
                 );
               })}
@@ -315,7 +319,9 @@ function NoteComposerModal({
             </View>
           </Surface>
           <Text style={[s.composeHint, { color: c.mutedForeground }]}>
-            Catatan akan muncul seperti pesan terbaru di daftar {category === 'general' ? 'catatan biasa' : 'perlu dibawa'}.
+            {t('Catatan akan muncul seperti pesan terbaru di daftar {category}.', {
+              category: t(category === 'general' ? 'catatan biasa' : 'perlu dibawa'),
+            })}
           </Text>
         </KeyboardAwareScrollViewCompat>
       </View>
@@ -357,6 +363,7 @@ function ShoppingContent({
   onClear: () => void;
 }) {
   const c = useColors();
+  const { t } = useLanguage();
   const completed = items.filter((item) => item.done);
   const pending = items.filter((item) => !item.done);
   const progress = items.length ? completed.length / items.length : 0;
@@ -376,8 +383,8 @@ function ShoppingContent({
               onPress={() => onDayChange(item)}
               style={({ pressed }) => [s.shoppingDayTab, { backgroundColor: active ? c.card : 'transparent', opacity: pressed ? 0.7 : 1 }]}
             >
-              <Text style={[s.shoppingDayLabel, { color: active ? c.foreground : c.mutedForeground }]}>{item === 'today' ? 'Hari ini' : 'Besok'}</Text>
-              <Text style={[s.shoppingDayHint, { color: active ? c.primary : c.mutedForeground }]}>{item === 'today' ? 'Yang dikerjakan' : 'Persiapan awal'}</Text>
+              <Text style={[s.shoppingDayLabel, { color: active ? c.foreground : c.mutedForeground }]}>{t(item === 'today' ? 'Hari ini' : 'Besok')}</Text>
+              <Text style={[s.shoppingDayHint, { color: active ? c.primary : c.mutedForeground }]}>{t(item === 'today' ? 'Yang dikerjakan' : 'Persiapan awal')}</Text>
             </Pressable>
           );
         })}
@@ -388,8 +395,8 @@ function ShoppingContent({
             <Ionicons name="basket-outline" size={21} color={c.primaryForeground} />
           </View>
           <View style={s.shoppingSummaryCopy}>
-            <Text style={[s.shoppingSummaryKicker, { color: c.primaryForeground + 'B8' }]}>{day === 'today' ? 'Belanja hari ini' : 'Rencana besok'}</Text>
-            <Text style={[s.shoppingSummaryTitle, { color: c.card }]}>{day === 'today' ? 'Selesaikan belanja' : 'Daftar belanja'}</Text>
+            <Text style={[s.shoppingSummaryKicker, { color: c.primaryForeground + 'B8' }]}>{t(day === 'today' ? 'Belanja hari ini' : 'Rencana besok')}</Text>
+            <Text style={[s.shoppingSummaryTitle, { color: c.card }]}>{t(day === 'today' ? 'Selesaikan belanja' : 'Daftar belanja')}</Text>
           </View>
           <Text style={[s.shoppingSummaryCount, { color: c.primaryForeground }]}>{completed.length}/{items.length}</Text>
         </View>
@@ -397,7 +404,11 @@ function ShoppingContent({
           <View style={[s.progressFill, { backgroundColor: c.primaryForeground, width: `${progress * 100}%` }]} />
         </View>
         <Text style={[s.shoppingSummaryHint, { color: c.primaryForeground + 'B8' }]}>
-          {items.length ? (completed.length === items.length ? 'Semua kebutuhan sudah dibeli.' : `${pending.length} barang masih perlu dibeli.`) : day === 'today' ? 'Belum ada belanja yang dipindahkan ke hari ini.' : 'Catat kebutuhan warung sebelum berangkat.'}
+          {items.length
+            ? (completed.length === items.length
+              ? t('Semua kebutuhan sudah dibeli.')
+              : t('{count} barang masih perlu dibeli.', { count: pending.length }))
+            : t(day === 'today' ? 'Belum ada belanja yang dipindahkan ke hari ini.' : 'Catat kebutuhan warung sebelum berangkat.')}
         </Text>
       </View>
 
@@ -464,15 +475,15 @@ function ShoppingContent({
       ) : (
         <EmptyState
           icon="checkmark-done-outline"
-          title={items.length ? 'Belanja sudah beres' : 'Mulai daftar belanja'}
-          body={items.length ? 'Semua barang di daftar ini sudah ditandai dibeli.' : 'Tambahkan barang dan jumlahnya agar persiapan besok lebih teratur.'}
+          title={t(items.length ? 'Belanja sudah beres' : 'Mulai daftar belanja')}
+          body={t(items.length ? 'Semua barang di daftar ini sudah ditandai dibeli.' : 'Tambahkan barang dan jumlahnya agar persiapan besok lebih teratur.')}
         />
       )}
 
       {completed.length ? (
         <View style={s.completedSection}>
           <View style={s.completedHeading}>
-            <Text style={[s.completedLabel, { color: c.mutedForeground }]}>SUDAH DIBELI · {completed.length}</Text>
+            <Text style={[s.completedLabel, { color: c.mutedForeground }]}>{t('SUDAH DIBELI · {count}', { count: completed.length })}</Text>
             <Pressable onPress={onClear} accessibilityRole="button" accessibilityLabel="Hapus barang yang sudah dibeli">
               <Text style={[s.clearButtonText, { color: c.primary }]}>Bersihkan</Text>
             </Pressable>
@@ -502,19 +513,22 @@ function ShoppingRow({
   onChangeQuantity: (day: ShoppingDay, id: string, delta: number) => void;
 }) {
   const c = useColors();
+  const { t } = useLanguage();
   return (
     <Surface style={s.shoppingRow}>
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: item.done }}
-        accessibilityLabel={item.done ? `Tandai ${item.text} belum dibeli` : `Tandai ${item.text} sudah dibeli`}
+        accessibilityLabel={item.done
+          ? t('Tandai {name} belum dibeli', { name: item.text })
+          : t('Tandai {name} sudah dibeli', { name: item.text })}
         onPress={() => onToggleItem(day, item)}
         style={({ pressed }) => [s.shoppingCheck, { backgroundColor: item.done ? c.primary : c.secondary, borderColor: item.done ? c.primary : c.border, opacity: pressed ? 0.7 : 1 }]}
       >
         {item.done ? <Ionicons name="checkmark" size={16} color={c.primaryForeground} /> : null}
       </Pressable>
       <View style={s.shoppingRowCopy}>
-        <Text style={[s.shoppingRowName, { color: item.done ? c.mutedForeground : c.foreground, textDecorationLine: item.done ? 'line-through' : 'none' }]}>{item.text}</Text>
+        <NativeText style={[s.shoppingRowName, { color: item.done ? c.mutedForeground : c.foreground, textDecorationLine: item.done ? 'line-through' : 'none' }]}>{item.text}</NativeText>
         <Text style={[s.shoppingRowMeta, { color: c.mutedForeground }]}>
           {item.quantity ?? 1} {item.unit ?? 'pcs'}{day === 'today' && item.price ? ` · ${formatRp(item.price)}` : ''}
         </Text>
@@ -531,7 +545,7 @@ function ShoppingRow({
                 placeholder="0"
                 placeholderTextColor={c.mutedForeground}
                 style={[s.itemPriceInput, { color: c.foreground }]}
-                accessibilityLabel={`Total harga ${item.text}`}
+                accessibilityLabel={t('Total harga {name}', { name: item.text })}
               />
             </View>
             {item.expenseRecorded ? <Ionicons name="checkmark-circle" size={15} color={c.primary} /> : null}
@@ -540,16 +554,16 @@ function ShoppingRow({
       </View>
       {!item.done ? (
         <View style={[s.stepper, { backgroundColor: c.secondary }]}>
-          <Pressable onPress={() => onChangeQuantity(day, item.id, -1)} hitSlop={6} accessibilityLabel={`Kurangi jumlah ${item.text}`}>
+          <Pressable onPress={() => onChangeQuantity(day, item.id, -1)} hitSlop={6} accessibilityLabel={t('Kurangi jumlah {name}', { name: item.text })}>
             <Ionicons name="remove" size={15} color={c.mutedForeground} />
           </Pressable>
           <Text style={[s.stepperValue, { color: c.foreground }]}>{item.quantity ?? 1}</Text>
-          <Pressable onPress={() => onChangeQuantity(day, item.id, 1)} hitSlop={6} accessibilityLabel={`Tambah jumlah ${item.text}`}>
+          <Pressable onPress={() => onChangeQuantity(day, item.id, 1)} hitSlop={6} accessibilityLabel={t('Tambah jumlah {name}', { name: item.text })}>
             <Ionicons name="add" size={15} color={c.primary} />
           </Pressable>
         </View>
       ) : null}
-      <Pressable accessibilityRole="button" accessibilityLabel={`Hapus ${item.text}`} onPress={() => onDelete(day, item.id)} hitSlop={8} style={s.deleteButton}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('Hapus {name}', { name: item.text })} onPress={() => onDelete(day, item.id)} hitSlop={8} style={s.deleteButton}>
         <Ionicons name="trash-outline" size={17} color={c.mutedForeground} />
       </Pressable>
     </Surface>
@@ -570,18 +584,21 @@ function NoteRow({
   onOpen: () => void;
 }) {
   const c = useColors();
+  const { locale, t } = useLanguage();
   const [subject, ...bodyLines] = item.text.split('\n');
-  const preview = bodyLines.join(' ').trim() || 'Tidak ada isi tambahan';
+  const preview = bodyLines.join(' ').trim();
   const createdAt = new Date(item.createdAt);
   const timeLabel = Number.isNaN(createdAt.getTime())
     ? ''
-    : createdAt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    : createdAt.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
   return (
     <Surface style={[s.noteRow, item.done ? s.noteRowDone : null]}>
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: item.done }}
-        accessibilityLabel={item.done ? `Tandai ${item.text} belum selesai` : `Tandai ${item.text} selesai`}
+        accessibilityLabel={item.done
+          ? t('Tandai {name} belum selesai', { name: item.text })
+          : t('Tandai {name} selesai', { name: item.text })}
         onPress={() => onToggle(category, item.id)}
         style={({ pressed }) => [s.checkButton, { backgroundColor: item.done ? c.primary : c.secondary, borderColor: item.done ? c.primary : c.border, opacity: pressed ? 0.72 : 1 }]}
       >
@@ -589,18 +606,18 @@ function NoteRow({
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Buka catatan ${subject || 'tanpa judul'}`}
+        accessibilityLabel={t('Buka catatan {name}', { name: subject || t('tanpa judul') })}
         onPress={onOpen}
         style={s.noteCopy}
       >
-        <Text numberOfLines={1} style={[s.noteSubject, { color: item.done ? c.mutedForeground : c.foreground, textDecorationLine: item.done ? 'line-through' : 'none' }]}>{subject || 'Tanpa judul'}</Text>
-        <Text numberOfLines={1} style={[s.notePreview, { color: c.mutedForeground }]}>{preview}</Text>
+        <NativeText numberOfLines={1} style={[s.noteSubject, { color: item.done ? c.mutedForeground : c.foreground, textDecorationLine: item.done ? 'line-through' : 'none' }]}>{subject || t('Tanpa judul')}</NativeText>
+        <NativeText numberOfLines={1} style={[s.notePreview, { color: c.mutedForeground }]}>{preview || t('Tidak ada isi tambahan')}</NativeText>
       </Pressable>
       <Text style={[s.noteDate, { color: item.done ? c.mutedForeground : c.primary }]}>{timeLabel}</Text>
       <Ionicons name="chevron-forward" size={15} color={c.mutedForeground} />
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Hapus ${item.text}`}
+        accessibilityLabel={t('Hapus {name}', { name: item.text })}
         onPress={() => onDelete(category, item.id)}
         hitSlop={8}
         style={({ pressed }) => [s.deleteButton, { opacity: pressed ? 0.55 : 1 }]}
@@ -621,6 +638,7 @@ function NoteDetailModal({
   onClose: () => void;
 }) {
   const c = useColors();
+  const { locale, t } = useLanguage();
   const insets = useSafeAreaInsets();
   if (!note) return null;
 
@@ -629,8 +647,8 @@ function NoteDetailModal({
   const createdAt = new Date(note.createdAt);
   const dateLabel = Number.isNaN(createdAt.getTime())
     ? ''
-    : createdAt.toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const categoryLabel = category === 'carry' ? 'Perlu dibawa' : 'Catatan biasa';
+    : createdAt.toLocaleString(locale, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const categoryLabel = t(category === 'carry' ? 'Perlu dibawa' : 'Catatan biasa');
 
   return (
     <Modal visible animationType="slide" onRequestClose={onClose}>
@@ -649,7 +667,7 @@ function NoteDetailModal({
             </View>
             <View style={[s.detailStatus, { backgroundColor: note.done ? c.secondary : c.primary }]}>
               <Ionicons name={note.done ? 'checkmark' : 'mail-open-outline'} size={15} color={note.done ? c.secondaryForeground : c.primaryForeground} />
-              <Text style={[s.detailStatusText, { color: note.done ? c.secondaryForeground : c.primaryForeground }]}>{note.done ? 'Selesai' : 'Aktif'}</Text>
+              <Text style={[s.detailStatusText, { color: note.done ? c.secondaryForeground : c.primaryForeground }]}>{t(note.done ? 'Selesai' : 'Aktif')}</Text>
             </View>
           </View>
 
@@ -664,10 +682,10 @@ function NoteDetailModal({
               </View>
             </View>
             <View style={[s.detailDivider, { backgroundColor: c.border }]} />
-            <Text style={[s.detailSubject, { color: c.foreground }]}>{subject || 'Tanpa judul'}</Text>
-            <Text style={[s.detailBody, { color: body ? c.foreground : c.mutedForeground }]}>
-              {body || 'Catatan ini tidak memiliki isi tambahan.'}
-            </Text>
+            <NativeText style={[s.detailSubject, { color: c.foreground }]}>{subject || t('Tanpa judul')}</NativeText>
+            <NativeText style={[s.detailBody, { color: body ? c.foreground : c.mutedForeground }]}>
+              {body || t('Catatan ini tidak memiliki isi tambahan.')}
+            </NativeText>
           </Surface>
         </ScrollView>
       </View>

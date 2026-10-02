@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert, BackHandler, Image, Modal, Platform, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Image, Modal, Platform, StyleSheet, Text as NativeText, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { reloadAppAsync } from 'expo';
 import * as DocumentPicker from 'expo-document-picker';
@@ -11,6 +11,8 @@ import { useAuth, useClerk, useUser } from '@clerk/expo';
 import { PageHeader, PrimaryButton, Screen, Surface } from '@/components/WarungUI';
 import { GoogleDriveBackupCard } from '@/components/GoogleDriveBackupCard';
 import { useColors } from '@/hooks/useColors';
+import { useLanguage } from '@/context/LanguageContext';
+import { Alert, Pressable, Share, Text } from '@/components/LocalizedPrimitives';
 import { useWarung } from '@/context/WarungContext';
 import { createOfflineBackup, parseOfflineBackup, type OfflineBackupEnvelope } from '@/utils/backupEnvelope';
 import { persistImageAsset } from '@/utils/persistentImage';
@@ -23,13 +25,6 @@ type OtherAuthState = {
   user: ReturnType<typeof useUser>['user'];
   userId: string | null;
   signOut: () => Promise<void>;
-};
-
-const formatBackupTime = (value: string) => {
-  if (!value) return 'Belum pernah dibackup';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Backup tersimpan';
-  return `Terakhir ${date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}`;
 };
 
 function MenuRow({
@@ -110,6 +105,7 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
   const c = useColors();
   const router = useRouter();
   const warung = useWarung();
+  const { locale, t } = useLanguage();
   const { isAuthLoaded, isSignedIn, user, userId, signOut } = auth;
   const offlineBackupKey = userId
     ? `${OFFLINE_BACKUP_KEY}:account:${encodeURIComponent(userId)}`
@@ -121,12 +117,21 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
   const [qrisSheetVisible, setQrisSheetVisible] = useState(false);
   const [accountNotice, setAccountNotice] = useState('');
 
+  const formatBackupTime = (value: string) => {
+    if (!value) return t('Belum pernah dibackup');
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return t('Backup tersimpan');
+    return t('Terakhir {date}', {
+      date: date.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }),
+    });
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
-      setAccountNotice('Kamu sudah keluar dari akun Kasir Miso.');
+      setAccountNotice(t('Kamu sudah keluar dari akun Kasir Miso.'));
     } catch {
-      setAccountNotice('Akun belum berhasil dikeluarkan. Silakan coba lagi.');
+      setAccountNotice(t('Akun belum berhasil dikeluarkan. Silakan coba lagi.'));
     }
   };
 
@@ -164,16 +169,16 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
         anchor.click();
         document.body.removeChild(anchor);
         URL.revokeObjectURL(url);
-        setNotice('Backup offline tersimpan dan file JSON sudah diunduh.');
+        setNotice(t('Backup offline tersimpan dan file JSON sudah diunduh.'));
       } else {
         await Share.share({
           title: 'Backup Kasir Miso',
-          message: 'Backup offline tersimpan di perangkat. Simpan file ini jika ingin memindahkannya.',
+          message: t('Backup offline tersimpan di perangkat. Simpan file ini jika ingin memindahkannya.'),
         });
-        setNotice('Backup offline tersimpan di perangkat.');
+        setNotice(t('Backup offline tersimpan di perangkat.'));
       }
     } catch {
-      setNotice('Backup offline belum berhasil. Coba lagi.');
+      setNotice(t('Backup offline belum berhasil. Coba lagi.'));
     } finally {
       setIsBackingUp(false);
     }
@@ -183,8 +188,11 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
     if (isRestoringOffline) return;
     const backupDate = formatBackupTime(backup.createdAt).toLowerCase();
       Alert.alert(
-        'Pulihkan cadangan offline?',
-        `Data aplikasi akan diganti dengan salinan ${sourceLabel} ${backupDate}.`,
+        t('Pulihkan cadangan offline?'),
+        t('Data aplikasi akan diganti dengan salinan {source} {date}.', {
+          source: sourceLabel,
+          date: backupDate,
+        }),
         [
           { text: 'Batal', style: 'cancel' },
           {
@@ -196,12 +204,12 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
                 try {
                   await warung.restoreState(backup.data);
                   Alert.alert(
-                    'Pemulihan selesai',
-                    'Cadangan offline sudah dipulihkan. Muat ulang aplikasi untuk melihat seluruh data.',
+                    t('Pemulihan selesai'),
+                    t('Cadangan offline sudah dipulihkan. Muat ulang aplikasi untuk melihat seluruh data.'),
                     [{ text: 'Muat ulang', onPress: () => void reloadAppAsync() }],
                   );
                 } catch {
-                  setNotice('Pemulihan offline belum berhasil. Cadangan asli tetap dipertahankan.');
+                  setNotice(t('Pemulihan offline belum berhasil. Cadangan asli tetap dipertahankan.'));
                 } finally {
                   setIsRestoringOffline(false);
                 }
@@ -217,12 +225,12 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
     try {
       const raw = await AsyncStorage.getItem(offlineBackupKey);
       if (!raw) {
-        setNotice('Belum ada cadangan offline di perangkat ini. Buat Backup Offline terlebih dahulu.');
+        setNotice(t('Belum ada cadangan offline di perangkat ini. Buat Backup Offline terlebih dahulu.'));
         return;
       }
-      requestOfflineRestore(parseOfflineBackup(raw), 'perangkat');
+      requestOfflineRestore(parseOfflineBackup(raw), t('perangkat'));
     } catch {
-      setNotice('Cadangan offline tidak bisa dibaca. Buat cadangan baru lalu coba lagi.');
+      setNotice(t('Cadangan offline tidak bisa dibaca. Buat cadangan baru lalu coba lagi.'));
     }
   };
 
@@ -240,9 +248,9 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
       const raw = Platform.OS === 'web' && asset.file
         ? await asset.file.text()
         : await FileSystem.readAsStringAsync(asset.uri, { encoding: 'utf8' });
-      requestOfflineRestore(parseOfflineBackup(raw), `file "${asset.name}"`);
+      requestOfflineRestore(parseOfflineBackup(raw), t('File "{name}"', { name: asset.name }));
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'File backup tidak bisa dibaca.');
+      setNotice(error instanceof Error ? error.message : t('File backup tidak bisa dibaca.'));
     }
   };
 
@@ -258,23 +266,25 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
       });
       if (!result.canceled && result.assets[0]?.uri) {
         warung.setQrisImageUri(await persistImageAsset(result.assets[0]));
-        setNotice('Gambar QRIS tersimpan dan akan tampil saat pembayaran QRIS dibuka.');
+        setNotice(t('Gambar QRIS tersimpan dan akan tampil saat pembayaran QRIS dibuka.'));
         setQrisSheetVisible(false);
       }
     } catch {
-      setNotice('Gambar QRIS tidak bisa dibuka. Coba pilih gambar lain.');
+      setNotice(t('Gambar QRIS tidak bisa dibuka. Coba pilih gambar lain.'));
     } finally {
       setIsQrisUploading(false);
     }
   };
 
   const showComingSoon = (label: string) => {
-    setNotice(`${label} belum tersedia. Tombolnya sudah disiapkan untuk pengembangan berikutnya.`);
+    setNotice(t('{label} belum tersedia. Tombolnya sudah disiapkan untuk pengembangan berikutnya.', {
+      label: t(label),
+    }));
   };
 
   const handleCloseApp = () => {
     if (Platform.OS === 'android') {
-      Alert.alert('Tutup aplikasi?', 'Aplikasi akan ditutup dari perangkat ini.', [
+      Alert.alert(t('Tutup aplikasi?'), t('Aplikasi akan ditutup dari perangkat ini.'), [
         { text: 'Batal', style: 'cancel' },
         { text: 'Tutup', style: 'destructive', onPress: () => BackHandler.exitApp() },
       ]);
@@ -283,11 +293,11 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
 
     if (Platform.OS === 'web') {
       if (typeof window !== 'undefined') window.close();
-      setNotice('Tab aplikasi tidak dapat ditutup otomatis dari browser. Silakan tutup tab ini.');
+      setNotice(t('Tab aplikasi tidak dapat ditutup otomatis dari browser. Silakan tutup tab ini.'));
       return;
     }
 
-    setNotice('Di iPhone, aplikasi perlu ditutup melalui pengalih aplikasi.');
+    setNotice(t('Di iPhone, aplikasi perlu ditutup melalui pengalih aplikasi.'));
   };
 
   return (
@@ -332,10 +342,12 @@ function OtherContent({ auth }: { auth: OtherAuthState }) {
               </View>
               <View style={s.accountCopy}>
                 <Text style={[s.accountLabel, { color: c.foreground }]}>
-                  {user?.fullName || 'Akun aktif'}
+          {user?.fullName ? <NativeText>{user.fullName}</NativeText> : 'Akun aktif'}
                 </Text>
                 <Text style={[s.accountDetail, { color: c.mutedForeground }]}>
-                  {user?.primaryEmailAddress?.emailAddress || 'Sesi Kasir Miso aktif'}
+                  {user?.primaryEmailAddress?.emailAddress
+                    ? <NativeText>{user.primaryEmailAddress.emailAddress}</NativeText>
+                    : 'Sesi Kasir Miso aktif'}
                 </Text>
               </View>
             </View>

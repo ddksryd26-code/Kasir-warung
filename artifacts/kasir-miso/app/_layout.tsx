@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ActivityIndicator, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, StyleSheet, View } from 'react-native';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -20,6 +20,8 @@ import * as Notifications from 'expo-notifications';
 import { WarungProvider } from '@/context/WarungContext';
 import { NotesProvider } from '@/context/NotesContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { Pressable, Text } from '@/components/LocalizedPrimitives';
 import { FirstLaunchTutorial } from '@/components/FirstLaunchTutorial';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
@@ -291,20 +293,22 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 
-  if (!clerkPublishableKey) return app;
+  if (!clerkPublishableKey) return <LanguageProvider>{app}</LanguageProvider>;
 
   return (
-    <ClerkProvider
-      publishableKey={clerkPublishableKey}
-      tokenCache={tokenCache}
-      proxyUrl={clerkProxyUrl}
-    >
-      <ClerkLoaded>
-        <AuthGate>
-          <ClerkApiBridge>{app}</ClerkApiBridge>
-        </AuthGate>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <LanguageProvider>
+      <ClerkProvider
+        publishableKey={clerkPublishableKey}
+        tokenCache={tokenCache}
+        proxyUrl={clerkProxyUrl}
+      >
+        <ClerkLoaded>
+          <AuthGate>
+            <ClerkApiBridge>{app}</ClerkApiBridge>
+          </AuthGate>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </LanguageProvider>
   );
 }
 

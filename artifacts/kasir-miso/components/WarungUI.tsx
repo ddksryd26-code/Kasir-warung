@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useColors } from '@/hooks/useColors';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { themeOptions } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
+import { Pressable, Text } from '@/components/LocalizedPrimitives';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 

@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable as NativePressable, ScrollView, StyleSheet, Text as NativeText, TextInput as NativeTextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatRp, isDateInReportPeriod, ReportPeriod, useWarung } from '@/context/WarungContext';
 import { useColors } from '@/hooks/useColors';
 import { EmptyState, IconButton, PageHeader, PrimaryButton, Screen, SectionHeader, Surface } from '@/components/WarungUI';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { useLanguage } from '@/context/LanguageContext';
+import { Alert, Pressable, Text, TextInput } from '@/components/LocalizedPrimitives';
 
 export default function ExpensesScreen() {
   const c = useColors();
+  const { locale, t } = useLanguage();
   const { expenses, inventory, savingsRules, savingsEntries, addExpense, addSavingsRule, addManualSaving, useSavings, deleteSavingsRule } = useWarung();
   const [period, setPeriod] = useState<ReportPeriod>('Hari ini');
   const [title, setTitle] = useState('');
@@ -49,11 +52,15 @@ export default function ExpensesScreen() {
     : period === 'Minggu ini'
       ? 'Pengeluaran dari Senin sampai hari ini'
       : 'Pengeluaran sejak awal bulan ini';
-  const formatExpenseDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
+  const formatExpenseDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+  });
+  const formatSavingDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'short',
   });
   const save = () => {
     if (!title.trim() || Number(amount) <= 0) {
@@ -93,7 +100,7 @@ export default function ExpensesScreen() {
       return;
     }
     if (value > spendingSaving.available) {
-      Alert.alert('Saldo tidak cukup', `Maksimal yang bisa dipakai adalah ${formatRp(spendingSaving.available)}.`);
+      Alert.alert('Saldo tidak cukup', t('Maksimal yang bisa dipakai adalah {amount}.', { amount: formatRp(spendingSaving.available) }));
       return;
     }
     useSavings(spendingSaving.id, spendingSaving.type, value);
@@ -132,7 +139,7 @@ export default function ExpensesScreen() {
         </View>
       }
     >
-      <PageHeader eyebrow="Operasional" title="Pencatatan biaya" subtitle="Satu catatan kecil membantu warung tetap sehat." backRoute="/" />
+       <PageHeader eyebrow="Operasional" title="Pencatatan biaya" subtitle="Satu catatan kecil membantu warung tetap sehat." backRoute="/" />
       <View style={s.periodSection}>
         <View style={s.periodHeader}>
           <View>
@@ -166,9 +173,9 @@ export default function ExpensesScreen() {
             <Ionicons name="trending-down-outline" size={22} color={c.primary} />
           </View>
           <View style={s.periodSummaryCopy}>
-            <Text style={[s.periodSummaryLabel, { color: c.mutedForeground }]}>{period.toUpperCase()}</Text>
+            <Text style={[s.periodSummaryLabel, { color: c.mutedForeground }]}>{t(period).toUpperCase()}</Text>
             <Text style={[s.periodValue, { color: c.foreground }]}>{formatRp(periodTotal)}</Text>
-            <Text style={[s.periodDescription, { color: c.mutedForeground }]}>{periodCopy}</Text>
+            <Text style={[s.periodDescription, { color: c.mutedForeground }]}>{t(periodCopy)}</Text>
           </View>
           <View style={[s.periodCount, { backgroundColor: c.muted }]}>
             <Text style={[s.periodCountValue, { color: c.foreground }]}>{periodExpenses.length}</Text>
@@ -186,21 +193,21 @@ export default function ExpensesScreen() {
         <TextInput value={amount} onChangeText={setAmount} keyboardType="number-pad" placeholder="Rp 0" placeholderTextColor={c.mutedForeground} style={[s.input, { borderColor: c.border, color: c.foreground, backgroundColor: c.background }]} />
         <PrimaryButton onPress={save} icon="save-outline">Simpan pengeluaran</PrimaryButton>
       </Surface>
-      <SectionHeader title={`Riwayat ${period.toLowerCase()}`} meta={`${formatRp(periodTotal)} · ${periodExpenses.length} catatan`} icon="list-outline" />
-      {!expenses.length ? <EmptyState icon="wallet-outline" title="Belum ada pengeluaran" body="Catatan biaya harian yang tersimpan akan muncul di sini." /> : !periodExpenses.length ? <EmptyState icon="calendar-outline" title={`Belum ada catatan ${period.toLowerCase()}`} body={`Belum ada pengeluaran yang tercatat untuk ${periodCopy.toLowerCase()}.`} /> : periodExpenses.slice().reverse().map((expense) => <Surface key={expense.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="receipt-outline" size={19} color={c.primary} /></View><View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{expense.title}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>{formatExpenseDate(expense.date)}</Text></View><Text style={[s.amount, { color: c.foreground }]}>{formatRp(expense.amount)}</Text></Surface>)}
-      <SectionHeader title="Dana disisihkan" meta={formatRp(savingsTotal)} icon="wallet-outline" />
+       <SectionHeader title={t('Riwayat {period}', { period: t(period).toLowerCase() })} meta={t('{amount} · {count} catatan', { amount: formatRp(periodTotal), count: periodExpenses.length })} icon="list-outline" />
+       {!expenses.length ? <EmptyState icon="wallet-outline" title={t('Belum ada pengeluaran')} body={t('Catatan biaya harian yang tersimpan akan muncul di sini.')} /> : !periodExpenses.length ? <EmptyState icon="calendar-outline" title={t('Belum ada catatan untuk {period}', { period: t(period).toLowerCase() })} body={t('Belum ada pengeluaran yang tercatat untuk {period}.', { period: t(periodCopy).toLowerCase() })} /> : periodExpenses.slice().reverse().map((expense) => <Surface key={expense.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="receipt-outline" size={19} color={c.primary} /></View><View style={s.flex}><NativeText style={[s.name, { color: c.foreground }]}>{expense.title}</NativeText><Text style={[s.sub, { color: c.mutedForeground }]}>{formatExpenseDate(expense.date)}</Text></View><Text style={[s.amount, { color: c.foreground }]}>{formatRp(expense.amount)}</Text></Surface>)}
+       <SectionHeader title="Dana disisihkan" meta={formatRp(savingsTotal)} icon="wallet-outline" />
        {!savingsRules.length && !savingsEntries.some((entry) => !entry.inventoryId) ? <EmptyState icon="wallet-outline" title="Belum ada dana disisihkan" body="Tambahkan aturan otomatis atau penyisihan khusus untuk memisahkan dana." /> : savingsRules.map((rule) => {
          const stock = inventory.find((item) => item.id === rule.inventoryId);
-          return <Surface key={rule.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="wallet-outline" size={19} color={c.primary} /></View><View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{rule.name}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>{stock?.name || 'Bahan dihapus'} · {rule.savedQty || 0} {stock?.unit || 'satuan'} × {formatRp(rule.amountPerItem)}</Text></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(rule.savedAmount)}</Text><View style={s.inlineActions}><IconButton icon="cart-outline" tone="primary" label={`Pakai ${rule.name} untuk belanja`} onPress={() => openSavingsSpend(rule.id, 'rule', rule.name, rule.savedAmount)} /><IconButton icon="trash-outline" label={`Hapus aturan ${rule.name}`} onPress={() => deleteSavingsRule(rule.id)} /></View></View></Surface>;
+           return <Surface key={rule.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="wallet-outline" size={19} color={c.primary} /></View><View style={s.flex}><NativeText style={[s.name, { color: c.foreground }]}>{rule.name}</NativeText><NativeText style={[s.sub, { color: c.mutedForeground }]}>{stock?.name || t('Bahan dihapus')} · {rule.savedQty || 0} {stock?.unit || t('satuan')} × {formatRp(rule.amountPerItem)}</NativeText></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(rule.savedAmount)}</Text><View style={s.inlineActions}><IconButton icon="cart-outline" tone="primary" label={t('Pakai {name} untuk belanja', { name: rule.name })} onPress={() => openSavingsSpend(rule.id, 'rule', rule.name, rule.savedAmount)} /><IconButton icon="trash-outline" label={t('Hapus aturan {name}', { name: rule.name })} onPress={() => deleteSavingsRule(rule.id)} /></View></View></Surface>;
        })}
-          {manualSavingGroups.map((saving) => <Surface key={saving.name} style={s.item}><View style={[s.icon, { backgroundColor: c.accent }]}><Ionicons name="wallet-outline" size={19} color={c.accentForeground} /></View><View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{saving.name}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>Penyisihan manual · terakhir {saving.latestDate}</Text></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(saving.amount)}</Text><View style={s.inlineActions}><IconButton icon="cart-outline" tone="primary" label={`Pakai ${saving.name} untuk belanja`} onPress={() => openSavingsSpend(saving.name, 'manual', saving.name, saving.amount)} /><IconButton icon="add" tone="primary" label={`Tambah penyisihan untuk ${saving.name}`} onPress={() => openManualSaving(saving.name)} /></View></View></Surface>)}
-          {consignmentSavingGroups.map((saving) => <Surface key={saving.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="storefront-outline" size={19} color={c.primary} /></View><View style={s.flex}><Text style={[s.name, { color: c.foreground }]}>{saving.name}</Text><Text style={[s.sub, { color: c.mutedForeground }]}>Harga beli penitip · terakhir {saving.latestDate}</Text></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(saving.amount)}</Text><IconButton icon="cart-outline" tone="primary" label={`Pakai dana ${saving.name} untuk belanja`} onPress={() => openSavingsSpend(saving.id, 'consignment', saving.name, saving.amount)} /></View></Surface>)}
+           {manualSavingGroups.map((saving) => <Surface key={saving.name} style={s.item}><View style={[s.icon, { backgroundColor: c.accent }]}><Ionicons name="wallet-outline" size={19} color={c.accentForeground} /></View><View style={s.flex}><NativeText style={[s.name, { color: c.foreground }]}>{saving.name}</NativeText><Text style={[s.sub, { color: c.mutedForeground }]}>{t('Penyisihan manual · terakhir {date}', { date: formatSavingDate(saving.latestDate) })}</Text></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(saving.amount)}</Text><View style={s.inlineActions}><IconButton icon="cart-outline" tone="primary" label={t('Pakai {name} untuk belanja', { name: saving.name })} onPress={() => openSavingsSpend(saving.name, 'manual', saving.name, saving.amount)} /><IconButton icon="add" tone="primary" label={t('Tambah penyisihan untuk {name}', { name: saving.name })} onPress={() => openManualSaving(saving.name)} /></View></View></Surface>)}
+           {consignmentSavingGroups.map((saving) => <Surface key={saving.id} style={s.item}><View style={[s.icon, { backgroundColor: c.secondary }]}><Ionicons name="storefront-outline" size={19} color={c.primary} /></View><View style={s.flex}><NativeText style={[s.name, { color: c.foreground }]}>{saving.name}</NativeText><Text style={[s.sub, { color: c.mutedForeground }]}>{t('Harga beli penitip · terakhir {date}', { date: formatSavingDate(saving.latestDate) })}</Text></View><View style={s.savingsRight}><Text style={[s.amount, { color: c.primary }]}>{formatRp(saving.amount)}</Text><IconButton icon="cart-outline" tone="primary" label={t('Pakai dana {name} untuk belanja', { name: saving.name })} onPress={() => openSavingsSpend(saving.id, 'consignment', saving.name, saving.amount)} /></View></Surface>)}
          <Modal visible={!!spendingSaving} transparent animationType="slide" onRequestClose={() => setSpendingSaving(null)}>
            <View style={[s.backdrop, { backgroundColor: c.foreground + 'B8' }]}>
              <KeyboardAwareScrollViewCompat style={s.modalScroll} contentContainerStyle={s.modalScrollContent} keyboardShouldPersistTaps="handled" bottomOffset={20}>
                <View style={[s.modal, { backgroundColor: c.card }]}>
                  <View style={s.modalHead}><View><Text style={[s.modalKicker, { color: c.primary }]}>PAKAI DANA</Text><Text style={[s.modalTitle, { color: c.foreground }]}>Untuk belanja</Text></View><Pressable accessibilityLabel="Tutup pemakaian dana" hitSlop={12} onPress={() => setSpendingSaving(null)}><Ionicons name="close-circle" size={27} color={c.mutedForeground} /></Pressable></View>
-                 <Text style={[s.formSub, { color: c.mutedForeground }]}>{spendingSaving?.name || ''} · tersedia {spendingSaving ? formatRp(spendingSaving.available) : formatRp(0)}. Pemakaian akan masuk ke riwayat pengeluaran.</Text>
+                  <NativeText style={[s.formSub, { color: c.mutedForeground }]}>{t('{name} · available {amount}. This amount will be added to expense history.', { name: spendingSaving?.name || '', amount: spendingSaving ? formatRp(spendingSaving.available) : formatRp(0) })}</NativeText>
                  <Text style={[s.label, { color: c.mutedForeground }]}>Nominal belanja</Text>
                  <TextInput autoFocus value={spendingAmount} onChangeText={setSpendingAmount} keyboardType="number-pad" placeholder="Rp 0" placeholderTextColor={c.mutedForeground} style={[s.input, { borderColor: c.border, color: c.foreground, backgroundColor: c.background }]} />
                  <PrimaryButton onPress={saveSavingsSpend} icon="cart-outline">Pakai untuk belanja</PrimaryButton>
@@ -217,10 +224,10 @@ export default function ExpensesScreen() {
                 <Text style={[s.label, { color: c.mutedForeground }]}>Nama penyisihan</Text>
                 <TextInput autoFocus value={savingName} onChangeText={setSavingName} placeholder="Contoh: Tabungan beli gas" placeholderTextColor={c.mutedForeground} style={[s.input, { borderColor: c.border, color: c.foreground, backgroundColor: c.background }]} />
                 <Text style={[s.label, { color: c.mutedForeground }]}>Jenis bahan stok</Text>
-                {!inventory.length ? <Text style={[s.emptyText, { color: c.mutedForeground }]}>Buat bahan stok terlebih dahulu di tab Stok.</Text> : <View style={s.menuOptions}>{inventory.map((item) => {
+                 {!inventory.length ? <Text style={[s.emptyText, { color: c.mutedForeground }]}>Buat bahan stok terlebih dahulu di tab Stok.</Text> : <View style={s.menuOptions}>{inventory.map((item) => {
                   const isSelected = selectedInventoryId === item.id;
                   const hasRule = savingsRules.some((rule) => rule.inventoryId === item.id);
-                  return <Pressable key={item.id} disabled={hasRule} onPress={() => setSelectedInventoryId(item.id)} style={[s.menuOption, { backgroundColor: isSelected ? c.primary : c.secondary, borderColor: isSelected ? c.primary : c.border, opacity: hasRule ? 0.5 : 1 }]}><Text style={[s.menuOptionText, { color: isSelected ? c.primaryForeground : c.foreground }]}>{item.name} ({item.unit})</Text>{hasRule ? <Ionicons name="checkmark-circle" size={17} color={c.primary} /> : null}</Pressable>;
+                   return <NativePressable key={item.id} disabled={hasRule} onPress={() => setSelectedInventoryId(item.id)} style={[s.menuOption, { backgroundColor: isSelected ? c.primary : c.secondary, borderColor: isSelected ? c.primary : c.border, opacity: hasRule ? 0.5 : 1 }]}><NativeText style={[s.menuOptionText, { color: isSelected ? c.primaryForeground : c.foreground }]}>{item.name} ({item.unit})</NativeText>{hasRule ? <Ionicons name="checkmark-circle" size={17} color={c.primary} /> : null}</NativePressable>;
                 })}</View>}
                 <Text style={[s.label, { color: c.mutedForeground }]}>Nominal disisihkan per satuan bahan</Text>
                 <TextInput value={savingAmount} onChangeText={setSavingAmount} keyboardType="number-pad" placeholder="Contoh: 500" placeholderTextColor={c.mutedForeground} style={[s.input, { borderColor: c.border, color: c.foreground, backgroundColor: c.background }]} />

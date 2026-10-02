@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { Pressable, Text } from '@/components/LocalizedPrimitives';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   completeFirstLaunchTutorial,
   hasCompletedFirstLaunchTutorial,
@@ -68,6 +70,7 @@ const steps: TutorialStep[] = [
 
 export function FirstLaunchTutorial() {
   const c = useColors();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [checked, setChecked] = useState(false);
@@ -147,7 +150,7 @@ export function FirstLaunchTutorial() {
             </Pressable>
           </View>
 
-          <View style={styles.progressRow} accessibilityLabel={`Langkah ${stepIndex + 1} dari ${steps.length}`}>
+          <View style={styles.progressRow} accessibilityLabel={t('Langkah {current} dari {total}', { current: stepIndex + 1, total: steps.length })}>
             {steps.map((item, index) => (
               <View
                 key={item.title}
@@ -183,7 +186,7 @@ export function FirstLaunchTutorial() {
               </View>
               <View style={styles.targetCopy}>
                 <Text style={[styles.targetTitle, { color: c.foreground }]}>
-                  Arahkan ke tombol {currentStep.targetLabel}
+                  {t('Arahkan ke tombol {target}', { target: t(currentStep.targetLabel) })}
                 </Text>
                 <Text style={[styles.targetBody, { color: c.mutedForeground }]}>
                   Tombolnya ada di bar bawah aplikasi.
@@ -197,7 +200,7 @@ export function FirstLaunchTutorial() {
             {currentStep.targetLabel && isLastStep ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Buka tab ${currentStep.targetLabel}`}
+                accessibilityLabel={t('Buka tab {target}', { target: t(currentStep.targetLabel) })}
                 onPress={openTarget}
                 style={({ pressed }) => [
                   styles.nextButton,
@@ -205,7 +208,7 @@ export function FirstLaunchTutorial() {
                 ]}
               >
                 <Text style={[styles.nextButtonText, { color: c.primaryForeground }]}>
-                  Buka tab {currentStep.targetLabel}
+                  {t('Buka tab {target}', { target: t(currentStep.targetLabel) })}
                 </Text>
                 <Ionicons name="arrow-forward" size={17} color={c.primaryForeground} />
               </Pressable>
@@ -239,7 +242,7 @@ export function FirstLaunchTutorial() {
             {currentStep.targetLabel && !isLastStep ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Langsung buka tab ${currentStep.targetLabel}`}
+                accessibilityLabel={t('Langsung buka tab {target}', { target: t(currentStep.targetLabel) })}
                 onPress={openTarget}
                 style={({ pressed }) => [
                   styles.targetButton,
@@ -248,7 +251,7 @@ export function FirstLaunchTutorial() {
               >
                 <Ionicons name="open-outline" size={16} color={c.primary} />
                 <Text style={[styles.targetButtonText, { color: c.secondaryForeground }]}>
-                  Langsung buka tab {currentStep.targetLabel}
+                  {t('Langsung buka tab {target}', { target: t(currentStep.targetLabel) })}
                 </Text>
               </Pressable>
             ) : null}
